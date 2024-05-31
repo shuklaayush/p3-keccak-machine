@@ -1,60 +1,53 @@
 use p3_air::VirtualPairCol;
 use p3_field::Field;
-use p3_interaction::{Interaction, InteractionAir, InteractionAirBuilder, InteractionChip};
+use p3_interaction::{Interaction, InteractionAir, InteractionAirBuilder, Rap};
 
-use super::{columns::MEMORY_COL_MAP, MemoryChip};
+use super::{columns::MemoryCols, MemoryChip};
 
-impl<F: Field> InteractionChip<F> for MemoryChip {
+impl<F: Field> InteractionAir<F> for MemoryChip {
     fn sends(&self) -> Vec<Interaction<F>> {
+        let col_map = MemoryCols::<F>::col_map();
         vec![
             // TODO: Combine with is_write?
             Interaction {
                 fields: vec![
-                    VirtualPairCol::single_main(MEMORY_COL_MAP.timestamp),
-                    VirtualPairCol::single_main(MEMORY_COL_MAP.addr),
-                    VirtualPairCol::single_main(MEMORY_COL_MAP.value),
+                    VirtualPairCol::single_main(col_map.timestamp),
+                    VirtualPairCol::single_main(col_map.addr),
+                    VirtualPairCol::single_main(col_map.value),
                 ],
-                count: VirtualPairCol::single_main(MEMORY_COL_MAP.is_read),
+                count: VirtualPairCol::single_main(col_map.is_read),
                 argument_index: self.bus_memory,
             },
             Interaction {
-                fields: vec![VirtualPairCol::single_main(MEMORY_COL_MAP.diff_limb_lo)],
-                count: VirtualPairCol::sum_main(vec![
-                    MEMORY_COL_MAP.is_read,
-                    MEMORY_COL_MAP.is_write,
-                ]),
+                fields: vec![VirtualPairCol::single_main(col_map.diff_limb_lo)],
+                count: VirtualPairCol::sum_main(vec![col_map.is_read, col_map.is_write]),
                 argument_index: self.bus_range_8,
             },
             Interaction {
-                fields: vec![VirtualPairCol::single_main(MEMORY_COL_MAP.diff_limb_md)],
-                count: VirtualPairCol::sum_main(vec![
-                    MEMORY_COL_MAP.is_read,
-                    MEMORY_COL_MAP.is_write,
-                ]),
+                fields: vec![VirtualPairCol::single_main(col_map.diff_limb_md)],
+                count: VirtualPairCol::sum_main(vec![col_map.is_read, col_map.is_write]),
                 argument_index: self.bus_range_8,
             },
             Interaction {
-                fields: vec![VirtualPairCol::single_main(MEMORY_COL_MAP.diff_limb_hi)],
-                count: VirtualPairCol::sum_main(vec![
-                    MEMORY_COL_MAP.is_read,
-                    MEMORY_COL_MAP.is_write,
-                ]),
+                fields: vec![VirtualPairCol::single_main(col_map.diff_limb_hi)],
+                count: VirtualPairCol::sum_main(vec![col_map.is_read, col_map.is_write]),
                 argument_index: self.bus_range_8,
             },
         ]
     }
 
     fn receives(&self) -> Vec<Interaction<F>> {
+        let col_map = MemoryCols::<F>::col_map();
         vec![Interaction {
             fields: vec![
-                VirtualPairCol::single_main(MEMORY_COL_MAP.timestamp),
-                VirtualPairCol::single_main(MEMORY_COL_MAP.addr),
-                VirtualPairCol::single_main(MEMORY_COL_MAP.value),
+                VirtualPairCol::single_main(col_map.timestamp),
+                VirtualPairCol::single_main(col_map.addr),
+                VirtualPairCol::single_main(col_map.value),
             ],
-            count: VirtualPairCol::single_main(MEMORY_COL_MAP.is_write),
+            count: VirtualPairCol::single_main(col_map.is_write),
             argument_index: self.bus_memory,
         }]
     }
 }
 
-impl<AB: InteractionAirBuilder> InteractionAir<AB> for MemoryChip {}
+impl<AB: InteractionAirBuilder> Rap<AB> for MemoryChip {}

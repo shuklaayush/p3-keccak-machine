@@ -3,26 +3,29 @@ use alloc::vec::Vec;
 
 use p3_air::VirtualPairCol;
 use p3_field::Field;
-use p3_interaction::{Interaction, InteractionAir, InteractionAirBuilder, InteractionChip};
+use p3_interaction::{Interaction, InteractionAir, InteractionAirBuilder, Rap};
 
 use super::{
-    columns::{RANGE_COL_MAP, RANGE_PREPROCESSED_COL_MAP},
+    columns::{RangeCols, RangePreprocessedCols},
     RangeCheckerChip,
 };
 
-impl<const MAX: u32, F: Field> InteractionChip<F> for RangeCheckerChip<MAX> {
+impl<const MAX: u32, F: Field> InteractionAir<F> for RangeCheckerChip<MAX> {
     fn receives(&self) -> Vec<Interaction<F>> {
+        let preprocessed_col_map = RangePreprocessedCols::<F>::col_map();
+        let main_col_map = RangeCols::<F>::col_map();
+
         vec![Interaction {
             fields: vec![VirtualPairCol::single_preprocessed(
-                RANGE_PREPROCESSED_COL_MAP.counter,
+                preprocessed_col_map.counter,
             )],
-            count: VirtualPairCol::single_main(RANGE_COL_MAP.mult),
+            count: VirtualPairCol::single_main(main_col_map.mult),
             argument_index: self.bus_range_8,
         }]
     }
 }
 
-impl<const MAX: u32, AB: InteractionAirBuilder> InteractionAir<AB> for RangeCheckerChip<MAX> {
+impl<const MAX: u32, AB: InteractionAirBuilder> Rap<AB> for RangeCheckerChip<MAX> {
     fn preprocessed_width(&self) -> usize {
         1
     }

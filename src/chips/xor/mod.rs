@@ -3,11 +3,9 @@ mod columns;
 mod interaction;
 mod trace;
 
-extern crate alloc;
-
 use alloc::vec::Vec;
+use p3_air_util::TraceWriter;
 use p3_field::{ExtensionField, PrimeField32};
-use p3_stark::AirDebug;
 
 use self::columns::XorCols;
 
@@ -19,8 +17,8 @@ pub struct XorChip {
     pub bus_xor_output: usize,
 }
 
-impl<F: PrimeField32, EF: ExtensionField<F>> AirDebug<F, EF> for XorChip {
-    #[cfg(feature = "debug-trace")]
+#[cfg(feature = "trace-writer")]
+impl<F: PrimeField32, EF: ExtensionField<F>> TraceWriter<F, EF> for XorChip {
     fn main_headers(&self) -> Vec<String> {
         XorCols::<F>::headers()
     }

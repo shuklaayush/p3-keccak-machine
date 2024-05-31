@@ -4,19 +4,16 @@ use p3_field::AbstractField;
 use p3_keccak_air::U64_LIMBS;
 use p3_matrix::Matrix;
 
-use super::{
-    columns::{MerkleTreeCols, NUM_MERKLE_TREE_COLS},
-    MerkleTreeChip,
-};
+use super::{columns::MerkleTreeCols, MerkleRootChip};
 use crate::chips::keccak_permute::NUM_U64_HASH_ELEMS;
 
-impl<F> BaseAir<F> for MerkleTreeChip {
+impl<F> BaseAir<F> for MerkleRootChip {
     fn width(&self) -> usize {
-        NUM_MERKLE_TREE_COLS
+        MerkleTreeCols::<F>::num_cols()
     }
 }
 
-impl<AB: AirBuilder> Air<AB> for MerkleTreeChip {
+impl<AB: AirBuilder> Air<AB> for MerkleRootChip {
     fn eval(&self, builder: &mut AB) {
         let main = builder.main();
         let local = main.row_slice(0);

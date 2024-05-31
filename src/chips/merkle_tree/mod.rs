@@ -3,21 +3,21 @@ mod columns;
 mod interaction;
 mod trace;
 
+use p3_air_util::TraceWriter;
 use p3_field::{ExtensionField, PrimeField32};
-use p3_stark::AirDebug;
 
 use self::columns::MerkleTreeCols;
 
 pub(crate) const NUM_U8_HASH_ELEMS: usize = 32;
 
 #[derive(Default, Clone, Debug)]
-pub struct MerkleTreeChip {
-    pub bus_keccak_permute_input: usize,
-    pub bus_keccak_digest_output: usize,
+pub struct MerkleRootChip {
+    pub bus_input: usize,
+    pub bus_output: usize,
 }
 
-impl<F: PrimeField32, EF: ExtensionField<F>> AirDebug<F, EF> for MerkleTreeChip {
-    #[cfg(feature = "debug-trace")]
+#[cfg(feature = "trace-writer")]
+impl<F: PrimeField32, EF: ExtensionField<F>> TraceWriter<F, EF> for MerkleRootChip {
     fn main_headers(&self) -> Vec<String> {
         MerkleTreeCols::<F>::headers()
     }
@@ -67,9 +67,9 @@ mod tests {
         let siblings = (0..height)
             .map(|i| digests[i][(leaf_index >> i) ^ 1])
             .collect::<Vec<[u8; 32]>>();
-        let trace = MerkleTreeChip::generate_trace(vec![leaf], vec![leaf_index], vec![siblings]);
+        let trace = MerkleRootChip::generate_trace(vec![leaf], vec![leaf_index], vec![siblings]);
 
-        let chip = MerkleTreeChip {
+        let chip = MerkleRootChip {
             ..Default::default()
         };
 

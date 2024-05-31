@@ -1,14 +1,7 @@
-use core::mem::{size_of, transmute};
-
-use p3_derive::AlignedBorrow;
-use p3_util::indices_arr;
-
-#[cfg(feature = "debug-trace")]
-use p3_derive::Headers;
+use p3_derive::{AirColumns, AlignedBorrow};
 
 #[repr(C)]
-#[derive(AlignedBorrow)]
-#[cfg_attr(feature = "debug-trace", derive(Headers))]
+#[derive(AlignedBorrow, AirColumns)]
 pub struct MemoryCols<T> {
     pub addr: T,
 
@@ -28,14 +21,4 @@ pub struct MemoryCols<T> {
     pub diff_limb_lo: T,
     pub diff_limb_md: T,
     pub diff_limb_hi: T,
-}
-
-impl<T: Copy> MemoryCols<T> {}
-
-pub(crate) const NUM_MEMORY_COLS: usize = size_of::<MemoryCols<u8>>();
-pub(crate) const MEMORY_COL_MAP: MemoryCols<usize> = make_col_map();
-
-const fn make_col_map() -> MemoryCols<usize> {
-    let indices_arr = indices_arr::<NUM_MEMORY_COLS>();
-    unsafe { transmute::<[usize; NUM_MEMORY_COLS], MemoryCols<usize>>(indices_arr) }
 }

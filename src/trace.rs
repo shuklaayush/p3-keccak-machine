@@ -6,12 +6,15 @@ use p3_matrix::dense::RowMajorMatrix;
 use p3_uni_stark::{StarkGenericConfig, Val};
 
 use crate::chips::{
-    keccak_permute::KeccakPermuteChip,
+    keccak_permute::{
+        trace::{KeccakPermuteOp, KeccakPermuteOpType},
+        KeccakPermuteChip,
+    },
     keccak_sponge::{
-        columns::KECCAK_RATE_BYTES, util::keccakf_u8s, KeccakSpongeChip, KeccakSpongeOp,
+        columns::KECCAK_RATE_BYTES, trace::KeccakSpongeOp, util::keccakf_u8s, KeccakSpongeChip,
     },
     memory::{MemoryChip, MemoryOp, OperationKind},
-    merkle_tree::MerkleTreeChip,
+    merkle_tree::MerkleRootChip,
     range_checker::RangeCheckerChip,
     xor::XorChip,
 };
@@ -55,12 +58,15 @@ where
                     .collect_vec()
                     .as_slice(),
             );
-            (input, true)
+            KeccakPermuteOp {
+                input,
+                op_type: KeccakPermuteOpType::Digest,
+            }
         })
         .collect_vec();
 
     let merkle_tree_trace =
-        MerkleTreeChip::generate_trace(vec![leaf], vec![leaf_index], vec![siblings]);
+        MerkleRootChip::generate_trace(vec![leaf], vec![leaf_index], vec![siblings]);
 
     let keccak_sponge_trace = KeccakSpongeChip::generate_trace(vec![KeccakSpongeOp {
         timestamp: 0,
@@ -118,7 +124,10 @@ where
             input
         })
         .collect_vec();
-    keccak_inputs.extend(keccak_inputs_full.into_iter().map(|input| (input, false)));
+    keccak_inputs.extend(keccak_inputs_full.into_iter().map(|input| KeccakPermuteOp {
+        input,
+        op_type: KeccakPermuteOpType::Full,
+    }));
 
     let keccak_permute_trace = KeccakPermuteChip::generate_trace(keccak_inputs);
 

@@ -6,7 +6,7 @@ use crate::{
     chips::KeccakMachineChip,
     chips::{
         keccak_permute::KeccakPermuteChip, keccak_sponge::KeccakSpongeChip, memory::MemoryChip,
-        merkle_tree::MerkleTreeChip, range_checker::RangeCheckerChip, xor::XorChip,
+        merkle_tree::MerkleRootChip, range_checker::RangeCheckerChip, xor::XorChip,
     },
 };
 
@@ -29,9 +29,9 @@ where
 {
     fn chips(&self) -> Vec<KeccakMachineChip> {
         let keccak_permute_chip = KeccakPermuteChip {
-            bus_keccak_permute_input: KeccakMachineBus::KeccakPermuteInput as usize,
-            bus_keccak_permute_output: KeccakMachineBus::KeccakPermuteOutput as usize,
-            bus_keccak_permute_digest_output: KeccakMachineBus::KeccakPermuteDigest as usize,
+            bus_input: KeccakMachineBus::KeccakPermuteInput as usize,
+            bus_output_full: KeccakMachineBus::KeccakPermuteOutput as usize,
+            bus_output_digest: KeccakMachineBus::KeccakPermuteDigest as usize,
         };
         let keccak_sponge_chip = KeccakSpongeChip {
             bus_xor_input: KeccakMachineBus::XorInput as usize,
@@ -41,9 +41,9 @@ where
             bus_xor_output: KeccakMachineBus::XorOutput as usize,
             bus_keccak_permute_output: KeccakMachineBus::KeccakPermuteOutput as usize,
         };
-        let merkle_tree_chip = MerkleTreeChip {
-            bus_keccak_permute_input: KeccakMachineBus::KeccakPermuteInput as usize,
-            bus_keccak_digest_output: KeccakMachineBus::KeccakPermuteDigest as usize,
+        let merkle_tree_chip = MerkleRootChip {
+            bus_input: KeccakMachineBus::KeccakPermuteInput as usize,
+            bus_output: KeccakMachineBus::KeccakPermuteDigest as usize,
         };
         let range_chip = RangeCheckerChip {
             bus_range_8: KeccakMachineBus::Range8 as usize,

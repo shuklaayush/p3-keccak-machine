@@ -5,13 +5,10 @@ use p3_matrix::dense::RowMajorMatrix;
 use p3_symmetric::{PseudoCompressionFunction, TruncatedPermutation};
 use tracing::instrument;
 
-use super::{
-    columns::{MerkleTreeCols, NUM_MERKLE_TREE_COLS},
-    MerkleTreeChip, NUM_U8_HASH_ELEMS,
-};
+use super::{columns::MerkleTreeCols, MerkleRootChip, NUM_U8_HASH_ELEMS};
 use crate::chips::keccak_permute::NUM_U64_HASH_ELEMS;
 
-impl MerkleTreeChip {
+impl MerkleRootChip {
     // TODO: Allow empty traces
     #[instrument(name = "generate MerkleTree trace", skip_all)]
     pub fn generate_trace<F: PrimeField32>(
@@ -19,12 +16,10 @@ impl MerkleTreeChip {
         leaf_indices: Vec<usize>,
         siblings: Vec<Vec<[u8; NUM_U8_HASH_ELEMS]>>,
     ) -> RowMajorMatrix<F> {
+        let num_cols = MerkleTreeCols::<F>::num_cols();
         let num_real_rows = siblings.iter().map(|s| s.len()).sum::<usize>();
         let num_rows = num_real_rows.next_power_of_two();
-        let mut trace = RowMajorMatrix::new(
-            vec![F::zero(); num_rows * NUM_MERKLE_TREE_COLS],
-            NUM_MERKLE_TREE_COLS,
-        );
+        let mut trace = RowMajorMatrix::new(vec![F::zero(); num_rows * num_cols], num_cols);
         let (prefix, rows, suffix) = unsafe { trace.values.align_to_mut::<MerkleTreeCols<F>>() };
         assert!(prefix.is_empty(), "Alignment should match");
         assert!(suffix.is_empty(), "Alignment should match");

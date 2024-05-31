@@ -1,14 +1,7 @@
-use core::mem::{size_of, transmute};
-
-use p3_derive::AlignedBorrow;
-use p3_util::indices_arr;
-
-#[cfg(feature = "debug-trace")]
-use p3_derive::Headers;
+use p3_derive::{AirColumns, AlignedBorrow};
 
 #[repr(C)]
-#[derive(AlignedBorrow)]
-#[cfg_attr(feature = "debug-trace", derive(Headers))]
+#[derive(AlignedBorrow, AirColumns)]
 pub struct XorCols<T> {
     pub is_real: T,
 
@@ -24,14 +17,4 @@ pub struct XorCols<T> {
 
     /// Aggregated output
     pub output: [T; 4],
-}
-
-impl<T: Copy> XorCols<T> {}
-
-pub(crate) const NUM_XOR_COLS: usize = size_of::<XorCols<u8>>();
-pub(crate) const XOR_COL_MAP: XorCols<usize> = make_col_map();
-
-const fn make_col_map() -> XorCols<usize> {
-    let indices_arr = indices_arr::<NUM_XOR_COLS>();
-    unsafe { transmute::<[usize; NUM_XOR_COLS], XorCols<usize>>(indices_arr) }
 }

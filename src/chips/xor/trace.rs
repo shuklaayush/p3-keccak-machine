@@ -1,18 +1,16 @@
 use p3_field::PrimeField32;
 use p3_matrix::dense::RowMajorMatrix;
 
-use super::{
-    columns::{XorCols, NUM_XOR_COLS},
-    XorChip,
-};
+use super::{columns::XorCols, XorChip};
 
 impl XorChip {
     pub fn generate_trace<F: PrimeField32>(
         operations: Vec<([u8; 4], [u8; 4])>,
     ) -> RowMajorMatrix<F> {
+        let num_cols = XorCols::<F>::num_cols();
         let num_real_rows = operations.len();
         let num_rows = num_real_rows.next_power_of_two();
-        let mut trace = RowMajorMatrix::new(vec![F::zero(); num_rows * NUM_XOR_COLS], NUM_XOR_COLS);
+        let mut trace = RowMajorMatrix::new(vec![F::zero(); num_rows * num_cols], num_cols);
 
         let (prefix, rows, suffix) = unsafe { trace.values.align_to_mut::<XorCols<F>>() };
         assert!(prefix.is_empty(), "Alignment should match");

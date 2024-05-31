@@ -1,10 +1,4 @@
-use core::mem::{size_of, transmute};
-
-use p3_derive::AlignedBorrow;
-use p3_util::indices_arr;
-
-#[cfg(feature = "debug-trace")]
-use p3_derive::Headers;
+use p3_derive::{AirColumns, AlignedBorrow};
 
 /// Total number of sponge bytes: number of rate bytes + number of capacity
 /// bytes.
@@ -28,8 +22,7 @@ pub(crate) const KECCAK_DIGEST_BYTES: usize = 32;
 pub(crate) const KECCAK_DIGEST_U16S: usize = KECCAK_DIGEST_BYTES / 2;
 
 #[repr(C)]
-#[derive(AlignedBorrow)]
-#[cfg_attr(feature = "debug-trace", derive(Headers))]
+#[derive(AlignedBorrow, AirColumns)]
 pub struct KeccakSpongeCols<T> {
     pub timestamp: T,
 
@@ -80,12 +73,4 @@ pub struct KeccakSpongeCols<T> {
     pub range_counter: T,
     /// The frequencies column used in logUp.
     pub rc_frequencies: T,
-}
-
-pub const NUM_KECCAK_SPONGE_COLS: usize = size_of::<KeccakSpongeCols<u8>>();
-pub(crate) const KECCAK_SPONGE_COL_MAP: KeccakSpongeCols<usize> = make_col_map();
-
-const fn make_col_map() -> KeccakSpongeCols<usize> {
-    let indices_arr = indices_arr::<NUM_KECCAK_SPONGE_COLS>();
-    unsafe { transmute::<[usize; NUM_KECCAK_SPONGE_COLS], KeccakSpongeCols<usize>>(indices_arr) }
 }

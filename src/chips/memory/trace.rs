@@ -2,18 +2,15 @@ use p3_field::PrimeField32;
 use p3_matrix::dense::RowMajorMatrix;
 use tracing::instrument;
 
-use super::{
-    columns::{MemoryCols, NUM_MEMORY_COLS},
-    MemoryChip, MemoryOp, OperationKind,
-};
+use super::{columns::MemoryCols, MemoryChip, MemoryOp, OperationKind};
 
 impl MemoryChip {
     #[instrument(name = "generate Memory trace", skip_all)]
     pub fn generate_trace<F: PrimeField32>(operations: Vec<MemoryOp>) -> RowMajorMatrix<F> {
+        let num_cols = MemoryCols::<F>::num_cols();
         let num_real_rows = operations.len();
         let num_rows = num_real_rows.next_power_of_two();
-        let mut trace =
-            RowMajorMatrix::new(vec![F::zero(); num_rows * NUM_MEMORY_COLS], NUM_MEMORY_COLS);
+        let mut trace = RowMajorMatrix::new(vec![F::zero(); num_rows * num_cols], num_cols);
 
         let (prefix, rows, suffix) = unsafe { trace.values.align_to_mut::<MemoryCols<F>>() };
         assert!(prefix.is_empty(), "Alignment should match");

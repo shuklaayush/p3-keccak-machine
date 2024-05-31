@@ -1,13 +1,13 @@
-use itertools::Itertools;
 use p3_air::VirtualPairCol;
 use p3_field::Field;
-use p3_interaction::{Interaction, InteractionAir, InteractionAirBuilder, InteractionChip};
+use p3_interaction::{Interaction, InteractionAir, InteractionAirBuilder, Rap};
 use p3_keccak_air::U64_LIMBS;
 
-use super::{columns::KECCAK_COL_MAP, KeccakPermuteChip, NUM_U64_HASH_ELEMS};
+use super::{columns::KeccakPermuteCols, KeccakPermuteChip, NUM_U64_HASH_ELEMS};
 
-impl<F: Field> InteractionChip<F> for KeccakPermuteChip {
+impl<F: Field> InteractionAir<F> for KeccakPermuteChip {
     fn sends(&self) -> Vec<Interaction<F>> {
+        let col_map = KeccakPermuteCols::<F>::col_map();
         vec![
             Interaction {
                 fields: (0..25)
@@ -16,14 +16,14 @@ impl<F: Field> InteractionChip<F> for KeccakPermuteChip {
                             .map(|limb| {
                                 let y = i / 5;
                                 let x = i % 5;
-                                KECCAK_COL_MAP.a_prime_prime_prime(y, x, limb)
+                                col_map.keccak.a_prime_prime_prime(y, x, limb)
                             })
-                            .collect_vec()
+                            .collect::<Vec<_>>()
                     })
                     .map(VirtualPairCol::single_main)
                     .collect(),
-                count: VirtualPairCol::single_main(KECCAK_COL_MAP.is_real_output),
-                argument_index: self.bus_keccak_permute_output,
+                count: VirtualPairCol::single_main(col_map.is_real_output),
+                argument_index: self.bus_output_full,
             },
             Interaction {
                 fields: (0..NUM_U64_HASH_ELEMS)
@@ -32,31 +32,33 @@ impl<F: Field> InteractionChip<F> for KeccakPermuteChip {
                             .map(|limb| {
                                 let y = i / 5;
                                 let x = i % 5;
-                                KECCAK_COL_MAP.a_prime_prime_prime(y, x, limb)
+                                col_map.keccak.a_prime_prime_prime(y, x, limb)
                             })
-                            .collect_vec()
+                            .collect::<Vec<_>>()
                     })
                     .map(VirtualPairCol::single_main)
                     .collect(),
-                count: VirtualPairCol::single_main(KECCAK_COL_MAP.is_real_digest),
-                argument_index: self.bus_keccak_permute_digest_output,
+                count: VirtualPairCol::single_main(col_map.is_real_digest),
+                argument_index: self.bus_output_digest,
             },
         ]
     }
 
     fn receives(&self) -> Vec<Interaction<F>> {
+        let col_map = KeccakPermuteCols::<F>::col_map();
         vec![Interaction {
-            fields: KECCAK_COL_MAP
+            fields: col_map
+                .keccak
                 .preimage
                 .into_iter()
                 .flatten()
                 .flatten()
                 .map(VirtualPairCol::single_main)
                 .collect(),
-            count: VirtualPairCol::single_main(KECCAK_COL_MAP.is_real_input),
-            argument_index: self.bus_keccak_permute_input,
+            count: VirtualPairCol::single_main(col_map.is_real_input),
+            argument_index: self.bus_input,
         }]
     }
 }
 
-impl<AB: InteractionAirBuilder> InteractionAir<AB> for KeccakPermuteChip {}
+impl<AB: InteractionAirBuilder> Rap<AB> for KeccakPermuteChip {}

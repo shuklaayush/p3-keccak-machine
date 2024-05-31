@@ -1,17 +1,16 @@
-extern crate alloc;
-
 use alloc::vec;
 use alloc::vec::Vec;
 
 use p3_air::VirtualPairCol;
 use p3_field::Field;
-use p3_interaction::{Interaction, InteractionAir, InteractionAirBuilder, InteractionChip};
+use p3_interaction::{Interaction, InteractionAir, InteractionAirBuilder, Rap};
 
-use super::{columns::XOR_COL_MAP, XorChip};
+use super::{columns::XorCols, XorChip};
 
-impl<F: Field> InteractionChip<F> for XorChip {
+impl<F: Field> InteractionAir<F> for XorChip {
     fn sends(&self) -> Vec<Interaction<F>> {
-        let column_weights = XOR_COL_MAP
+        let col_map = XorCols::<F>::col_map();
+        let column_weights = col_map
             .output
             .into_iter()
             .enumerate()
@@ -19,14 +18,15 @@ impl<F: Field> InteractionChip<F> for XorChip {
             .collect();
         vec![Interaction {
             fields: vec![VirtualPairCol::new_main(column_weights, F::zero())],
-            count: VirtualPairCol::single_main(XOR_COL_MAP.is_real),
+            count: VirtualPairCol::single_main(col_map.is_real),
             argument_index: self.bus_xor_output,
         }]
     }
 
     fn receives(&self) -> Vec<Interaction<F>> {
+        let col_map = XorCols::<F>::col_map();
         let vc1 = {
-            let column_weights = XOR_COL_MAP
+            let column_weights = col_map
                 .input1
                 .into_iter()
                 .enumerate()
@@ -35,7 +35,7 @@ impl<F: Field> InteractionChip<F> for XorChip {
             VirtualPairCol::new_main(column_weights, F::zero())
         };
         let vc2 = {
-            let column_weights = XOR_COL_MAP
+            let column_weights = col_map
                 .input2
                 .into_iter()
                 .enumerate()
@@ -45,10 +45,10 @@ impl<F: Field> InteractionChip<F> for XorChip {
         };
         vec![Interaction {
             fields: vec![vc1, vc2],
-            count: VirtualPairCol::single_main(XOR_COL_MAP.is_real),
+            count: VirtualPairCol::single_main(col_map.is_real),
             argument_index: self.bus_xor_input,
         }]
     }
 }
 
-impl<AB: InteractionAirBuilder> InteractionAir<AB> for XorChip {}
+impl<AB: InteractionAirBuilder> Rap<AB> for XorChip {}

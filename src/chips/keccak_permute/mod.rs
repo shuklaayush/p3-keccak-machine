@@ -1,28 +1,28 @@
 mod air;
 mod columns;
 mod interaction;
-mod round_flags;
-mod trace;
+pub mod trace;
 
+use p3_air_util::TraceWriter;
 use p3_field::{ExtensionField, PrimeField32};
-use p3_stark::AirDebug;
 
-use self::columns::KeccakCols;
+use self::columns::KeccakPermuteCols;
 
 pub const NUM_U64_HASH_ELEMS: usize = 4;
 
 /// Assumes the field size is at least 16 bits.
 #[derive(Clone, Debug)]
 pub struct KeccakPermuteChip {
-    pub bus_keccak_permute_input: usize,
-    pub bus_keccak_permute_output: usize,
-    pub bus_keccak_permute_digest_output: usize,
+    pub bus_input: usize,
+
+    pub bus_output_full: usize,
+    pub bus_output_digest: usize,
 }
 
-impl<F: PrimeField32, EF: ExtensionField<F>> AirDebug<F, EF> for KeccakPermuteChip {
-    #[cfg(feature = "debug-trace")]
+#[cfg(feature = "trace-writer")]
+impl<F: PrimeField32, EF: ExtensionField<F>> TraceWriter<F, EF> for KeccakPermuteChip {
     fn main_headers(&self) -> Vec<String> {
-        KeccakCols::<F>::headers()
+        KeccakPermuteCols::<F>::headers()
     }
 }
 
@@ -34,17 +34,23 @@ mod tests {
     use itertools::Itertools;
     use p3_uni_stark::VerificationError;
     use rand::random;
+    use trace::{KeccakPermuteOp, KeccakPermuteOpType};
 
     #[test]
     fn test_keccak_prove() -> Result<(), VerificationError> {
-        const NUM_HASHES: usize = 10;
+        const NUM_PERMS: usize = 10;
 
         let chip = KeccakPermuteChip {
-            bus_keccak_permute_input: 0,
-            bus_keccak_permute_output: 0,
-            bus_keccak_permute_digest_output: 0,
+            bus_input: 0,
+            bus_output_full: 0,
+            bus_output_digest: 0,
         };
-        let inputs = (0..NUM_HASHES).map(|_| random()).collect_vec();
+        let inputs = (0..NUM_PERMS)
+            .map(|_| KeccakPermuteOp {
+                input: random(),
+                op_type: KeccakPermuteOpType::Full,
+            })
+            .collect_vec();
         let trace = KeccakPermuteChip::generate_trace(inputs);
 
         prove_and_verify(&chip, trace, vec![])

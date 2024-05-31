@@ -3,15 +3,12 @@ use p3_air::{Air, AirBuilder, BaseAir};
 use p3_field::AbstractField;
 use p3_matrix::Matrix;
 
-use super::columns::{
-    KeccakSpongeCols, KECCAK_DIGEST_U16S, KECCAK_RATE_BYTES, KECCAK_RATE_U16S,
-    NUM_KECCAK_SPONGE_COLS,
-};
+use super::columns::{KeccakSpongeCols, KECCAK_DIGEST_U16S, KECCAK_RATE_BYTES, KECCAK_RATE_U16S};
 use super::KeccakSpongeChip;
 
 impl<F> BaseAir<F> for KeccakSpongeChip {
     fn width(&self) -> usize {
-        NUM_KECCAK_SPONGE_COLS
+        KeccakSpongeCols::<F>::num_cols()
     }
 }
 

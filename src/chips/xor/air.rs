@@ -4,12 +4,12 @@ use p3_air::{Air, AirBuilder, BaseAir};
 use p3_field::{AbstractField, Field};
 use p3_matrix::Matrix;
 
-use super::columns::{XorCols, NUM_XOR_COLS};
+use super::columns::XorCols;
 use super::XorChip;
 
 impl<F: Field> BaseAir<F> for XorChip {
     fn width(&self) -> usize {
-        NUM_XOR_COLS
+        XorCols::<F>::num_cols()
     }
 }
 

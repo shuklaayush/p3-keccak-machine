@@ -6,25 +6,30 @@ use tracing::instrument;
 use super::{
     columns::{
         KeccakSpongeCols, KECCAK_DIGEST_U16S, KECCAK_RATE_BYTES, KECCAK_RATE_U16S,
-        KECCAK_WIDTH_U16S, NUM_KECCAK_SPONGE_COLS,
+        KECCAK_WIDTH_U16S,
     },
     util::keccakf_u16s,
-    KeccakSpongeChip, KeccakSpongeOp,
+    KeccakSpongeChip,
 };
+
+#[derive(Default, Clone)]
+pub struct KeccakSpongeOp {
+    pub timestamp: u32,
+    pub addr: u32,
+    pub input: Vec<u8>,
+}
 
 impl KeccakSpongeChip {
     #[instrument(name = "generate KeccakSponge trace", skip_all)]
     pub fn generate_trace<F: PrimeField32>(inputs: Vec<KeccakSpongeOp>) -> RowMajorMatrix<F> {
+        let num_cols = KeccakSpongeCols::<F>::num_cols();
         // Generate the witness row-wise.
         let num_rows = inputs
             .iter()
             .map(|op| op.input.len() / KECCAK_RATE_BYTES + 1)
             .sum::<usize>()
             .next_power_of_two();
-        let mut trace = RowMajorMatrix::new(
-            vec![F::zero(); num_rows * NUM_KECCAK_SPONGE_COLS],
-            NUM_KECCAK_SPONGE_COLS,
-        );
+        let mut trace = RowMajorMatrix::new(vec![F::zero(); num_rows * num_cols], num_cols);
         let (prefix, rows, suffix) = unsafe { trace.values.align_to_mut::<KeccakSpongeCols<F>>() };
         assert!(prefix.is_empty(), "Alignment should match");
         assert!(suffix.is_empty(), "Alignment should match");

@@ -1,25 +1,24 @@
 use itertools::Itertools;
 use p3_air::VirtualPairCol;
 use p3_field::Field;
-use p3_interaction::{Interaction, InteractionAir, InteractionAirBuilder, InteractionChip};
+use p3_interaction::{Interaction, InteractionAir, InteractionAirBuilder, Rap};
 
-use super::{
-    columns::{KECCAK_RATE_BYTES, KECCAK_SPONGE_COL_MAP},
-    KeccakSpongeChip,
-};
+use super::{columns::KECCAK_RATE_BYTES, KeccakSpongeChip, KeccakSpongeCols};
 
-impl<F: Field> InteractionChip<F> for KeccakSpongeChip {
+impl<F: Field> InteractionAir<F> for KeccakSpongeChip {
     fn sends(&self) -> Vec<Interaction<F>> {
+        let col_map = KeccakSpongeCols::<F>::col_map();
+
         let is_real = VirtualPairCol::sum_main(vec![
-            KECCAK_SPONGE_COL_MAP.is_padding_byte[KECCAK_RATE_BYTES - 1],
-            KECCAK_SPONGE_COL_MAP.is_full_input_block,
+            col_map.is_padding_byte[KECCAK_RATE_BYTES - 1],
+            col_map.is_full_input_block,
         ]);
 
         [
-            KECCAK_SPONGE_COL_MAP
+            col_map
                 .block_bytes
                 .chunks(4)
-                .zip(KECCAK_SPONGE_COL_MAP.original_rate_u16s.chunks(2))
+                .zip(col_map.original_rate_u16s.chunks(2))
                 .map(|(block, rate)| {
                     let vc1 = {
                         let column_weights = block
@@ -45,10 +44,10 @@ impl<F: Field> InteractionChip<F> for KeccakSpongeChip {
                 })
                 .collect_vec(),
             vec![Interaction {
-                fields: KECCAK_SPONGE_COL_MAP
+                fields: col_map
                     .xored_rate_u16s
                     .into_iter()
-                    .chain(KECCAK_SPONGE_COL_MAP.original_capacity_u16s)
+                    .chain(col_map.original_capacity_u16s)
                     .map(VirtualPairCol::single_main)
                     .collect(),
                 count: is_real.clone(),
@@ -56,9 +55,7 @@ impl<F: Field> InteractionChip<F> for KeccakSpongeChip {
             }],
             (0..KECCAK_RATE_BYTES)
                 .map(|i| Interaction {
-                    fields: vec![VirtualPairCol::single_main(
-                        KECCAK_SPONGE_COL_MAP.block_bytes[i],
-                    )],
+                    fields: vec![VirtualPairCol::single_main(col_map.block_bytes[i])],
                     count: is_real.clone(),
                     argument_index: self.bus_range_8,
                 })
@@ -68,14 +65,16 @@ impl<F: Field> InteractionChip<F> for KeccakSpongeChip {
     }
 
     fn receives(&self) -> Vec<Interaction<F>> {
+        let col_map = KeccakSpongeCols::<F>::col_map();
+
         let is_real = VirtualPairCol::sum_main(vec![
-            KECCAK_SPONGE_COL_MAP.is_padding_byte[KECCAK_RATE_BYTES - 1],
-            KECCAK_SPONGE_COL_MAP.is_full_input_block,
+            col_map.is_padding_byte[KECCAK_RATE_BYTES - 1],
+            col_map.is_full_input_block,
         ]);
 
         // We recover the 16-bit digest limbs from their corresponding bytes,
         // and then append them to the rest of the updated state limbs.
-        let mut fields = KECCAK_SPONGE_COL_MAP
+        let mut fields = col_map
             .updated_digest_state_bytes
             .chunks(2)
             .map(|cols| {
@@ -89,7 +88,7 @@ impl<F: Field> InteractionChip<F> for KeccakSpongeChip {
             .collect_vec();
 
         fields.extend(
-            KECCAK_SPONGE_COL_MAP
+            col_map
                 .partial_updated_state_u16s
                 .into_iter()
                 .map(VirtualPairCol::single_main),
@@ -99,38 +98,35 @@ impl<F: Field> InteractionChip<F> for KeccakSpongeChip {
             (0..KECCAK_RATE_BYTES)
                 .map(|i| {
                     let is_real = if i == KECCAK_RATE_BYTES - 1 {
-                        VirtualPairCol::single_main(KECCAK_SPONGE_COL_MAP.is_full_input_block)
+                        VirtualPairCol::single_main(col_map.is_full_input_block)
                     } else {
                         VirtualPairCol::new_main(
                             vec![
-                                (KECCAK_SPONGE_COL_MAP.is_full_input_block, F::one()),
-                                (
-                                    KECCAK_SPONGE_COL_MAP.is_padding_byte[KECCAK_RATE_BYTES - 1],
-                                    F::one(),
-                                ),
-                                (KECCAK_SPONGE_COL_MAP.is_padding_byte[i], -F::one()),
+                                (col_map.is_full_input_block, F::one()),
+                                (col_map.is_padding_byte[KECCAK_RATE_BYTES - 1], F::one()),
+                                (col_map.is_padding_byte[i], -F::one()),
                             ],
                             F::zero(),
                         )
                     };
                     Interaction {
                         fields: vec![
-                            VirtualPairCol::single_main(KECCAK_SPONGE_COL_MAP.timestamp),
+                            VirtualPairCol::single_main(col_map.timestamp),
                             VirtualPairCol::new_main(
                                 vec![
-                                    (KECCAK_SPONGE_COL_MAP.base_addr, F::one()),
-                                    (KECCAK_SPONGE_COL_MAP.already_absorbed_bytes, F::one()),
+                                    (col_map.base_addr, F::one()),
+                                    (col_map.already_absorbed_bytes, F::one()),
                                 ],
                                 F::from_canonical_usize(i),
                             ),
-                            VirtualPairCol::single_main(KECCAK_SPONGE_COL_MAP.block_bytes[i]),
+                            VirtualPairCol::single_main(col_map.block_bytes[i]),
                         ],
                         count: is_real,
                         argument_index: self.bus_memory,
                     }
                 })
                 .collect_vec(),
-            KECCAK_SPONGE_COL_MAP
+            col_map
                 .xored_rate_u16s
                 .chunks(2)
                 .map(|rate| {
@@ -156,4 +152,4 @@ impl<F: Field> InteractionChip<F> for KeccakSpongeChip {
     }
 }
 
-impl<AB: InteractionAirBuilder> InteractionAir<AB> for KeccakSpongeChip {}
+impl<AB: InteractionAirBuilder> Rap<AB> for KeccakSpongeChip {}

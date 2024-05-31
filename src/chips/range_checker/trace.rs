@@ -3,16 +3,13 @@ use std::collections::BTreeMap;
 use p3_field::PrimeField32;
 use p3_matrix::dense::RowMajorMatrix;
 
-use super::{
-    columns::{RangeCols, NUM_RANGE_COLS},
-    RangeCheckerChip,
-};
+use super::{columns::RangeCols, RangeCheckerChip};
 
 impl<const MAX: u32> RangeCheckerChip<MAX> {
     pub fn generate_trace<F: PrimeField32>(count: BTreeMap<u32, u32>) -> RowMajorMatrix<F> {
+        let num_cols = RangeCols::<F>::num_cols();
         let num_rows = MAX.next_power_of_two() as usize;
-        let mut trace =
-            RowMajorMatrix::new(vec![F::zero(); num_rows * NUM_RANGE_COLS], NUM_RANGE_COLS);
+        let mut trace = RowMajorMatrix::new(vec![F::zero(); num_rows * num_cols], num_cols);
         let (prefix, rows, suffix) = unsafe { trace.values.align_to_mut::<RangeCols<F>>() };
         assert!(prefix.is_empty(), "Alignment should match");
         assert!(suffix.is_empty(), "Alignment should match");

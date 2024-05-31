@@ -22,9 +22,9 @@ p3-symmetric = { git = "https://github.com/Plonky3/Plonky3.git" }
 p3-uni-stark = { git = "https://github.com/Plonky3/Plonky3.git" }
 p3-util = { git = "https://github.com/Plonky3/Plonky3.git" }
 
+p3-air-util = { git = "https://github.com/shuklaayush/p3-utils.git" }
 p3-derive = { git = "https://github.com/shuklaayush/p3-utils.git" }
 p3-interaction = { git = "https://github.com/shuklaayush/p3-utils.git" }
-p3-stark = { git = "https://github.com/shuklaayush/p3-utils.git" }
 p3-machine = { git = "https://github.com/shuklaayush/p3-utils.git" }
 
 itertools = "0.12.1"
@@ -39,5 +39,5 @@ tracing-forest = { version = "0.1.6", features = ["ansi", "smallvec"] }
 tiny-keccak = "2.0.2"
 
 [features]
-default = ["debug-trace"]
-debug-trace = ["p3-stark/debug-trace", "p3-machine/debug-trace"]
+default = ["trace-writer"]
+trace-writer = ["p3-air-util/trace-writer", "p3-machine/trace-writer"]

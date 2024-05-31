@@ -10,14 +10,14 @@ pub mod xor;
 
 use self::{
     keccak_permute::KeccakPermuteChip, keccak_sponge::KeccakSpongeChip, memory::MemoryChip,
-    merkle_tree::MerkleTreeChip, range_checker::RangeCheckerChip, xor::XorChip,
+    merkle_tree::MerkleRootChip, range_checker::RangeCheckerChip, xor::XorChip,
 };
 
 #[derive(Clone, Debug, EnumDispatch)]
 pub enum KeccakMachineChip {
     KeccakPermute(KeccakPermuteChip),
     KeccakSponge(KeccakSpongeChip),
-    MerkleTree(MerkleTreeChip),
+    MerkleTree(MerkleRootChip),
     Range8(RangeCheckerChip<256>),
     Xor(XorChip),
     Memory(MemoryChip),

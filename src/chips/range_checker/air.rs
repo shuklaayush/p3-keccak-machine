@@ -2,12 +2,11 @@ use p3_air::{Air, AirBuilder, BaseAir};
 use p3_field::Field;
 use p3_matrix::dense::RowMajorMatrix;
 
-use super::columns::NUM_RANGE_COLS;
-use super::RangeCheckerChip;
+use super::{columns::RangeCols, RangeCheckerChip};
 
 impl<F: Field, const MAX: u32> BaseAir<F> for RangeCheckerChip<MAX> {
     fn width(&self) -> usize {
-        NUM_RANGE_COLS
+        RangeCols::<F>::num_cols()
     }
 
     fn preprocessed_trace(&self) -> Option<RowMajorMatrix<F>> {
