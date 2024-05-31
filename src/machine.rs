@@ -49,8 +49,8 @@ where
             bus_range_8: KeccakMachineBus::Range8 as usize,
         };
         let xor_chip = XorChip {
-            bus_xor_input: KeccakMachineBus::XorInput as usize,
-            bus_xor_output: KeccakMachineBus::XorOutput as usize,
+            bus_input: KeccakMachineBus::XorInput as usize,
+            bus_output: KeccakMachineBus::XorOutput as usize,
         };
         let memory_chip = MemoryChip {
             bus_memory: KeccakMachineBus::Memory as usize,

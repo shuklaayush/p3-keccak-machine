@@ -37,7 +37,7 @@ mod tests {
     use trace::{KeccakPermuteOp, KeccakPermuteOpType};
 
     #[test]
-    fn test_keccak_prove() -> Result<(), VerificationError> {
+    fn test_keccak_permute_prove() -> Result<(), VerificationError> {
         const NUM_PERMS: usize = 10;
 
         let chip = KeccakPermuteChip {

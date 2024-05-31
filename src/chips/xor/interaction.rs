@@ -19,7 +19,7 @@ impl<F: Field> InteractionAir<F> for XorChip {
         vec![Interaction {
             fields: vec![VirtualPairCol::new_main(column_weights, F::zero())],
             count: VirtualPairCol::single_main(col_map.is_real),
-            argument_index: self.bus_xor_output,
+            argument_index: self.bus_output,
         }]
     }
 
@@ -46,7 +46,7 @@ impl<F: Field> InteractionAir<F> for XorChip {
         vec![Interaction {
             fields: vec![vc1, vc2],
             count: VirtualPairCol::single_main(col_map.is_real),
-            argument_index: self.bus_xor_input,
+            argument_index: self.bus_input,
         }]
     }
 }

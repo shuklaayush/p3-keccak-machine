@@ -13,8 +13,8 @@ use self::columns::XorCols;
 //       Can be extended to a general CPU chip.
 #[derive(Clone, Debug)]
 pub struct XorChip {
-    pub bus_xor_input: usize,
-    pub bus_xor_output: usize,
+    pub bus_input: usize,
+    pub bus_output: usize,
 }
 
 #[cfg(feature = "trace-writer")]
