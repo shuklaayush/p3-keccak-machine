@@ -1,12 +1,12 @@
 use itertools::Itertools;
 use p3_air::VirtualPairCol;
-use p3_field::AbstractField;
+use p3_field::Field;
 use p3_interaction::{Interaction, InteractionAir, InteractionAirBuilder, InteractionChip};
 use p3_keccak_air::U64_LIMBS;
 
 use super::{columns::KECCAK_COL_MAP, KeccakPermuteChip, NUM_U64_HASH_ELEMS};
 
-impl<F: AbstractField> InteractionChip<F> for KeccakPermuteChip {
+impl<F: Field> InteractionChip<F> for KeccakPermuteChip {
     fn sends(&self) -> Vec<Interaction<F>> {
         vec![
             Interaction {

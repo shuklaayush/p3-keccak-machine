@@ -1,3 +1,5 @@
+extern crate alloc;
+
 mod chips;
 mod config;
 mod machine;

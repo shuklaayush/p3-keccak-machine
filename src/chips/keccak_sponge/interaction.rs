@@ -1,6 +1,6 @@
 use itertools::Itertools;
 use p3_air::VirtualPairCol;
-use p3_field::AbstractField;
+use p3_field::Field;
 use p3_interaction::{Interaction, InteractionAir, InteractionAirBuilder, InteractionChip};
 
 use super::{
@@ -8,7 +8,7 @@ use super::{
     KeccakSpongeChip,
 };
 
-impl<F: AbstractField> InteractionChip<F> for KeccakSpongeChip {
+impl<F: Field> InteractionChip<F> for KeccakSpongeChip {
     fn sends(&self) -> Vec<Interaction<F>> {
         let is_real = VirtualPairCol::sum_main(vec![
             KECCAK_SPONGE_COL_MAP.is_padding_byte[KECCAK_RATE_BYTES - 1],

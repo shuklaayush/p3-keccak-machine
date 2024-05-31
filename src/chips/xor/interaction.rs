@@ -4,12 +4,12 @@ use alloc::vec;
 use alloc::vec::Vec;
 
 use p3_air::VirtualPairCol;
-use p3_field::AbstractField;
+use p3_field::Field;
 use p3_interaction::{Interaction, InteractionAir, InteractionAirBuilder, InteractionChip};
 
 use super::{columns::XOR_COL_MAP, XorChip};
 
-impl<F: AbstractField> InteractionChip<F> for XorChip {
+impl<F: Field> InteractionChip<F> for XorChip {
     fn sends(&self) -> Vec<Interaction<F>> {
         let column_weights = XOR_COL_MAP
             .output

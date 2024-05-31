@@ -1,10 +1,8 @@
-extern crate alloc;
-
 use alloc::vec;
 use alloc::vec::Vec;
 
 use p3_air::VirtualPairCol;
-use p3_field::AbstractField;
+use p3_field::Field;
 use p3_interaction::{Interaction, InteractionAir, InteractionAirBuilder, InteractionChip};
 
 use super::{
@@ -12,7 +10,7 @@ use super::{
     RangeCheckerChip,
 };
 
-impl<const MAX: u32, F: AbstractField> InteractionChip<F> for RangeCheckerChip<MAX> {
+impl<const MAX: u32, F: Field> InteractionChip<F> for RangeCheckerChip<MAX> {
     fn receives(&self) -> Vec<Interaction<F>> {
         vec![Interaction {
             fields: vec![VirtualPairCol::single_preprocessed(
