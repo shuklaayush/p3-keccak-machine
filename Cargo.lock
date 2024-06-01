@@ -233,7 +233,6 @@ dependencies = [
 [[package]]
 name = "p3-air-util"
 version = "0.1.0"
-source = "git+https://github.com/shuklaayush/p3-utils.git#e10309ca4d62a8dd326fb6c5968a615aa0831ac5"
 dependencies = [
  "p3-air",
  "p3-field",
@@ -289,7 +288,6 @@ dependencies = [
 [[package]]
 name = "p3-derive"
 version = "0.1.0"
-source = "git+https://github.com/shuklaayush/p3-utils.git#e10309ca4d62a8dd326fb6c5968a615aa0831ac5"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -344,7 +342,6 @@ dependencies = [
 [[package]]
 name = "p3-interaction"
 version = "0.1.0"
-source = "git+https://github.com/shuklaayush/p3-utils.git#e10309ca4d62a8dd326fb6c5968a615aa0831ac5"
 dependencies = [
  "p3-air",
  "p3-field",
@@ -371,19 +368,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "p3-keccak-air"
-version = "0.1.0"
-source = "git+https://github.com/Plonky3/Plonky3.git#ed21a5e11cb20effadaab606598ccad4e70e1a3e"
-dependencies = [
- "p3-air",
- "p3-field",
- "p3-matrix",
- "p3-maybe-rayon",
- "p3-util",
- "tracing",
-]
-
-[[package]]
 name = "p3-keccak-machine"
 version = "0.1.0"
 dependencies = [
@@ -399,7 +383,6 @@ dependencies = [
  "p3-fri",
  "p3-interaction",
  "p3-keccak",
- "p3-keccak-air",
  "p3-machine",
  "p3-matrix",
  "p3-maybe-rayon",
@@ -420,7 +403,6 @@ dependencies = [
 [[package]]
 name = "p3-machine"
 version = "0.1.0"
-source = "git+https://github.com/shuklaayush/p3-utils.git#e10309ca4d62a8dd326fb6c5968a615aa0831ac5"
 dependencies = [
  "itertools 0.12.1",
  "p3-air",

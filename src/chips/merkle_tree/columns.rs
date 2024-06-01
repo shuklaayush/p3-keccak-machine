@@ -1,10 +1,10 @@
-use p3_derive::{AirColumns, AlignedBorrow};
-use p3_keccak_air::U64_LIMBS;
+use p3_derive::AirColumns;
 
+use crate::airs::keccak::U64_LIMBS;
 use crate::chips::keccak_permute::NUM_U64_HASH_ELEMS;
 
 #[repr(C)]
-#[derive(AlignedBorrow, AirColumns)]
+#[derive(AirColumns)]
 pub struct MerkleTreeCols<T> {
     pub is_real: T,
 

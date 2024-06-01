@@ -3,6 +3,8 @@ mod columns;
 mod interaction;
 pub mod trace;
 
+use alloc::vec::Vec;
+
 use p3_air_util::TraceWriter;
 use p3_field::{ExtensionField, PrimeField32};
 

@@ -5,6 +5,19 @@ use p3_interaction::{Interaction, InteractionAir, InteractionAirBuilder, Rap};
 use super::{columns::MemoryCols, MemoryChip};
 
 impl<F: Field> InteractionAir<F> for MemoryChip {
+    fn receives(&self) -> Vec<Interaction<F>> {
+        let col_map = MemoryCols::<F>::col_map();
+        vec![Interaction {
+            fields: vec![
+                VirtualPairCol::single_main(col_map.timestamp),
+                VirtualPairCol::single_main(col_map.addr),
+                VirtualPairCol::single_main(col_map.value),
+            ],
+            count: VirtualPairCol::single_main(col_map.is_write),
+            argument_index: self.bus_memory,
+        }]
+    }
+
     fn sends(&self) -> Vec<Interaction<F>> {
         let col_map = MemoryCols::<F>::col_map();
         vec![
@@ -34,19 +47,6 @@ impl<F: Field> InteractionAir<F> for MemoryChip {
                 argument_index: self.bus_range_8,
             },
         ]
-    }
-
-    fn receives(&self) -> Vec<Interaction<F>> {
-        let col_map = MemoryCols::<F>::col_map();
-        vec![Interaction {
-            fields: vec![
-                VirtualPairCol::single_main(col_map.timestamp),
-                VirtualPairCol::single_main(col_map.addr),
-                VirtualPairCol::single_main(col_map.value),
-            ],
-            count: VirtualPairCol::single_main(col_map.is_write),
-            argument_index: self.bus_memory,
-        }]
     }
 }
 

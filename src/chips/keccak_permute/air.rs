@@ -1,11 +1,11 @@
 use core::borrow::Borrow;
 use p3_air::{Air, AirBuilder, BaseAir};
 use p3_air_util::builders::SubAirBuilder;
-use p3_keccak_air::{KeccakAir, NUM_KECCAK_COLS, NUM_ROUNDS};
 use p3_matrix::Matrix;
 
 use super::columns::KeccakPermuteCols;
 use super::KeccakPermuteChip;
+use crate::airs::keccak::{KeccakAir, NUM_KECCAK_COLS, NUM_ROUNDS};
 
 impl<F> BaseAir<F> for KeccakPermuteChip {
     fn width(&self) -> usize {

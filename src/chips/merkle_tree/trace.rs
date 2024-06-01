@@ -1,11 +1,11 @@
 use p3_field::{PrimeField32, PrimeField64};
 use p3_keccak::KeccakF;
-use p3_keccak_air::U64_LIMBS;
 use p3_matrix::dense::RowMajorMatrix;
 use p3_symmetric::{PseudoCompressionFunction, TruncatedPermutation};
 use tracing::instrument;
 
 use super::{columns::MerkleTreeCols, MerkleRootChip, NUM_U8_HASH_ELEMS};
+use crate::airs::keccak::U64_LIMBS;
 use crate::chips::keccak_permute::NUM_U64_HASH_ELEMS;
 
 impl MerkleRootChip {

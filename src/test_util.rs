@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 use p3_air::Air;
 use p3_field::PrimeField32;
 use p3_matrix::dense::RowMajorMatrix;

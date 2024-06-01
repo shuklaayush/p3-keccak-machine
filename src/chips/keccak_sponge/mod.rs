@@ -4,6 +4,8 @@ mod interaction;
 pub mod trace;
 pub mod util;
 
+use alloc::vec::Vec;
+
 use p3_air_util::TraceWriter;
 use p3_field::{ExtensionField, PrimeField32};
 
@@ -20,8 +22,8 @@ pub struct KeccakSpongeChip {
     pub bus_xor_input: usize,
     pub bus_xor_output: usize,
 
-    pub bus_keccak_permute_input: usize,
-    pub bus_keccak_permute_output: usize,
+    pub bus_permute_input: usize,
+    pub bus_permute_output: usize,
 }
 
 #[cfg(feature = "trace-writer")]

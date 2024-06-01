@@ -1,11 +1,11 @@
 use p3_field::PrimeField32;
-use p3_keccak_air::{generate_trace_rows, NUM_KECCAK_COLS, NUM_ROUNDS};
 use p3_matrix::dense::RowMajorMatrix;
 use p3_matrix::Matrix;
 use tracing::instrument;
 
 use super::columns::KeccakPermuteCols;
 use super::KeccakPermuteChip;
+use crate::airs::keccak::{generate_trace_rows, NUM_KECCAK_COLS, NUM_ROUNDS};
 
 pub enum KeccakPermuteOpType {
     Full,

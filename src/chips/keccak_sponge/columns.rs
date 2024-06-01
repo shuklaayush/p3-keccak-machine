@@ -1,4 +1,4 @@
-use p3_derive::{AirColumns, AlignedBorrow};
+use p3_derive::AirColumns;
 
 /// Total number of sponge bytes: number of rate bytes + number of capacity
 /// bytes.
@@ -22,7 +22,7 @@ pub(crate) const KECCAK_DIGEST_BYTES: usize = 32;
 pub(crate) const KECCAK_DIGEST_U16S: usize = KECCAK_DIGEST_BYTES / 2;
 
 #[repr(C)]
-#[derive(AlignedBorrow, AirColumns)]
+#[derive(AirColumns)]
 pub struct KeccakSpongeCols<T> {
     pub timestamp: T,
 

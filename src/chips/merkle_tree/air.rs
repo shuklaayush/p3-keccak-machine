@@ -1,10 +1,10 @@
 use core::borrow::Borrow;
 use p3_air::{Air, AirBuilder, BaseAir};
 use p3_field::AbstractField;
-use p3_keccak_air::U64_LIMBS;
 use p3_matrix::Matrix;
 
 use super::{columns::MerkleTreeCols, MerkleRootChip};
+use crate::airs::keccak::U64_LIMBS;
 use crate::chips::keccak_permute::NUM_U64_HASH_ELEMS;
 
 impl<F> BaseAir<F> for MerkleRootChip {

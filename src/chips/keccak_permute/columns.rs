@@ -1,8 +1,9 @@
-use p3_derive::{AirColumns, AlignedBorrow};
-use p3_keccak_air::KeccakCols;
+use p3_derive::AirColumns;
+
+use crate::airs::keccak::KeccakCols;
 
 #[repr(C)]
-#[derive(AlignedBorrow, AirColumns)]
+#[derive(AirColumns)]
 pub struct KeccakPermuteCols<T> {
     pub keccak: KeccakCols<T>,
 

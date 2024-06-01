@@ -6,64 +6,6 @@ use p3_interaction::{Interaction, InteractionAir, InteractionAirBuilder, Rap};
 use super::{columns::KECCAK_RATE_BYTES, KeccakSpongeChip, KeccakSpongeCols};
 
 impl<F: Field> InteractionAir<F> for KeccakSpongeChip {
-    fn sends(&self) -> Vec<Interaction<F>> {
-        let col_map = KeccakSpongeCols::<F>::col_map();
-
-        let is_real = VirtualPairCol::sum_main(vec![
-            col_map.is_padding_byte[KECCAK_RATE_BYTES - 1],
-            col_map.is_full_input_block,
-        ]);
-
-        [
-            col_map
-                .block_bytes
-                .chunks(4)
-                .zip(col_map.original_rate_u16s.chunks(2))
-                .map(|(block, rate)| {
-                    let vc1 = {
-                        let column_weights = block
-                            .iter()
-                            .enumerate()
-                            .map(|(i, &c)| (c, F::from_canonical_usize(1 << (8 * i))))
-                            .collect_vec();
-                        VirtualPairCol::new_main(column_weights, F::zero())
-                    };
-                    let vc2 = {
-                        let column_weights = rate
-                            .iter()
-                            .enumerate()
-                            .map(|(i, &c)| (c, F::from_canonical_usize(1 << (16 * i))))
-                            .collect_vec();
-                        VirtualPairCol::new_main(column_weights, F::zero())
-                    };
-                    Interaction {
-                        fields: vec![vc1, vc2],
-                        count: is_real.clone(),
-                        argument_index: self.bus_xor_input,
-                    }
-                })
-                .collect_vec(),
-            vec![Interaction {
-                fields: col_map
-                    .xored_rate_u16s
-                    .into_iter()
-                    .chain(col_map.original_capacity_u16s)
-                    .map(VirtualPairCol::single_main)
-                    .collect(),
-                count: is_real.clone(),
-                argument_index: self.bus_keccak_permute_input,
-            }],
-            (0..KECCAK_RATE_BYTES)
-                .map(|i| Interaction {
-                    fields: vec![VirtualPairCol::single_main(col_map.block_bytes[i])],
-                    count: is_real.clone(),
-                    argument_index: self.bus_range_8,
-                })
-                .collect_vec(),
-        ]
-        .concat()
-    }
-
     fn receives(&self) -> Vec<Interaction<F>> {
         let col_map = KeccakSpongeCols::<F>::col_map();
 
@@ -145,8 +87,66 @@ impl<F: Field> InteractionAir<F> for KeccakSpongeChip {
             vec![Interaction {
                 fields,
                 count: is_real.clone(),
-                argument_index: self.bus_keccak_permute_output,
+                argument_index: self.bus_permute_output,
             }],
+        ]
+        .concat()
+    }
+
+    fn sends(&self) -> Vec<Interaction<F>> {
+        let col_map = KeccakSpongeCols::<F>::col_map();
+
+        let is_real = VirtualPairCol::sum_main(vec![
+            col_map.is_padding_byte[KECCAK_RATE_BYTES - 1],
+            col_map.is_full_input_block,
+        ]);
+
+        [
+            col_map
+                .block_bytes
+                .chunks(4)
+                .zip(col_map.original_rate_u16s.chunks(2))
+                .map(|(block, rate)| {
+                    let vc1 = {
+                        let column_weights = block
+                            .iter()
+                            .enumerate()
+                            .map(|(i, &c)| (c, F::from_canonical_usize(1 << (8 * i))))
+                            .collect_vec();
+                        VirtualPairCol::new_main(column_weights, F::zero())
+                    };
+                    let vc2 = {
+                        let column_weights = rate
+                            .iter()
+                            .enumerate()
+                            .map(|(i, &c)| (c, F::from_canonical_usize(1 << (16 * i))))
+                            .collect_vec();
+                        VirtualPairCol::new_main(column_weights, F::zero())
+                    };
+                    Interaction {
+                        fields: vec![vc1, vc2],
+                        count: is_real.clone(),
+                        argument_index: self.bus_xor_input,
+                    }
+                })
+                .collect_vec(),
+            vec![Interaction {
+                fields: col_map
+                    .xored_rate_u16s
+                    .into_iter()
+                    .chain(col_map.original_capacity_u16s)
+                    .map(VirtualPairCol::single_main)
+                    .collect(),
+                count: is_real.clone(),
+                argument_index: self.bus_permute_input,
+            }],
+            (0..KECCAK_RATE_BYTES)
+                .map(|i| Interaction {
+                    fields: vec![VirtualPairCol::single_main(col_map.block_bytes[i])],
+                    count: is_real.clone(),
+                    argument_index: self.bus_range_8,
+                })
+                .collect_vec(),
         ]
         .concat()
     }

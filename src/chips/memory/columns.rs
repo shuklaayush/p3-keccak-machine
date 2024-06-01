@@ -1,7 +1,7 @@
-use p3_derive::{AirColumns, AlignedBorrow};
+use p3_derive::AirColumns;
 
 #[repr(C)]
-#[derive(AlignedBorrow, AirColumns)]
+#[derive(AirColumns)]
 pub struct MemoryCols<T> {
     pub addr: T,
 
