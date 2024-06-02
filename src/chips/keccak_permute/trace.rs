@@ -41,7 +41,13 @@ impl KeccakPermuteChip {
                     row[col_map.is_real_input] = F::one();
                 }
                 if i % NUM_ROUNDS == NUM_ROUNDS - 1 {
-                    row[col_map.is_real_output] = F::one();
+                    let op = &ops[i / NUM_ROUNDS];
+                    match op.op_type {
+                        KeccakPermuteOpType::Full => row[col_map.is_real_output_full] = F::one(),
+                        KeccakPermuteOpType::Digest => {
+                            row[col_map.is_real_output_digest] = F::one();
+                        }
+                    }
                 }
             }
         }

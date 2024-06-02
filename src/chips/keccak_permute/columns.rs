@@ -11,7 +11,7 @@ pub struct KeccakPermuteCols<T> {
 
     pub is_real_input: T,
 
-    pub is_real_output: T,
+    pub is_real_output_full: T,
 
-    pub is_real_digest: T,
+    pub is_real_output_digest: T,
 }

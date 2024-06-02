@@ -38,7 +38,7 @@ impl<F: Field> InteractionAir<F> for KeccakPermuteChip {
                     })
                     .map(VirtualPairCol::single_main)
                     .collect(),
-                count: VirtualPairCol::single_main(col_map.is_real_output),
+                count: VirtualPairCol::single_main(col_map.is_real_output_full),
                 argument_index: self.bus_output_full,
             },
             Interaction {
@@ -54,7 +54,7 @@ impl<F: Field> InteractionAir<F> for KeccakPermuteChip {
                     })
                     .map(VirtualPairCol::single_main)
                     .collect(),
-                count: VirtualPairCol::single_main(col_map.is_real_digest),
+                count: VirtualPairCol::single_main(col_map.is_real_output_digest),
                 argument_index: self.bus_output_digest,
             },
         ]

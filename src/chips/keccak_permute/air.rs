@@ -24,9 +24,10 @@ impl<AB: AirBuilder> Air<AB> for KeccakPermuteChip {
             local.is_real * local.keccak.step_flags[0],
             local.is_real_input,
         );
+        // TODO: Probably underconstrained
         builder.assert_eq(
             local.is_real * local.keccak.step_flags[NUM_ROUNDS - 1],
-            local.is_real_output,
+            local.is_real_output_full + local.is_real_output_digest,
         );
 
         let keccak_air = KeccakAir {};
