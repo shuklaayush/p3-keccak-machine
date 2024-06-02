@@ -3,7 +3,10 @@ use p3_air::VirtualPairCol;
 use p3_field::Field;
 use p3_interaction::{Interaction, InteractionAir, InteractionAirBuilder, Rap};
 
-use super::{columns::KECCAK_RATE_BYTES, KeccakSpongeChip, KeccakSpongeCols};
+use super::{
+    columns::{KeccakSpongeCols, KECCAK_RATE_BYTES},
+    KeccakSpongeChip,
+};
 
 impl<F: Field> InteractionAir<F> for KeccakSpongeChip {
     fn receives(&self) -> Vec<Interaction<F>> {

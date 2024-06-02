@@ -4,7 +4,7 @@ use p3_matrix::dense::RowMajorMatrix;
 use p3_symmetric::{PseudoCompressionFunction, TruncatedPermutation};
 use tracing::instrument;
 
-use super::{columns::MerkleTreeCols, MerkleRootChip, NUM_U8_HASH_ELEMS};
+use super::{columns::MerkleRootCols, MerkleRootChip, NUM_U8_HASH_ELEMS};
 use crate::airs::keccak::U64_LIMBS;
 use crate::chips::keccak_permute::NUM_U64_HASH_ELEMS;
 
@@ -16,11 +16,11 @@ impl MerkleRootChip {
         leaf_indices: Vec<usize>,
         siblings: Vec<Vec<[u8; NUM_U8_HASH_ELEMS]>>,
     ) -> RowMajorMatrix<F> {
-        let num_cols = MerkleTreeCols::<F>::num_cols();
+        let num_cols = MerkleRootCols::<F>::num_cols();
         let num_real_rows = siblings.iter().map(|s| s.len()).sum::<usize>();
         let num_rows = num_real_rows.next_power_of_two();
         let mut trace = RowMajorMatrix::new(vec![F::zero(); num_rows * num_cols], num_cols);
-        let (prefix, rows, suffix) = unsafe { trace.values.align_to_mut::<MerkleTreeCols<F>>() };
+        let (prefix, rows, suffix) = unsafe { trace.values.align_to_mut::<MerkleRootCols<F>>() };
         assert!(prefix.is_empty(), "Alignment should match");
         assert!(suffix.is_empty(), "Alignment should match");
         assert_eq!(rows.len(), num_rows);
@@ -55,7 +55,7 @@ impl MerkleRootChip {
 }
 
 pub fn generate_trace_rows_for_leaf<F: PrimeField64>(
-    rows: &mut [MerkleTreeCols<F>],
+    rows: &mut [MerkleRootCols<F>],
     leaf: &[u8; NUM_U8_HASH_ELEMS],
     leaf_index: usize,
     siblings: &[[u8; NUM_U8_HASH_ELEMS]],
@@ -95,7 +95,7 @@ pub fn generate_trace_rows_for_leaf<F: PrimeField64>(
 }
 
 pub fn generate_trace_row_for_round<F: PrimeField64>(
-    row: &mut MerkleTreeCols<F>,
+    row: &mut MerkleRootCols<F>,
     parity_bit: usize,
     node: &[u8; NUM_U8_HASH_ELEMS],
     sibling: &[u8; NUM_U8_HASH_ELEMS],

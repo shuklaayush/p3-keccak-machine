@@ -3,13 +3,10 @@ mod columns;
 mod interaction;
 mod trace;
 
-use alloc::vec::Vec;
-
-use columns::RangePreprocessedCols;
+#[cfg(feature = "trace-writer")]
 use p3_air_util::TraceWriter;
-use p3_field::{ExtensionField, PrimeField32};
-
-use self::columns::RangeCols;
+#[cfg(feature = "trace-writer")]
+use p3_field::{ExtensionField, Field};
 
 #[derive(Default, Clone, Debug)]
 pub struct RangeCheckerChip<const MAX: u32> {
@@ -17,15 +14,13 @@ pub struct RangeCheckerChip<const MAX: u32> {
 }
 
 #[cfg(feature = "trace-writer")]
-impl<const MAX: u32, F: PrimeField32, EF: ExtensionField<F>> TraceWriter<F, EF>
-    for RangeCheckerChip<MAX>
-{
+impl<const MAX: u32, F: Field, EF: ExtensionField<F>> TraceWriter<F, EF> for RangeCheckerChip<MAX> {
     fn preprocessed_headers(&self) -> Vec<String> {
-        RangePreprocessedCols::<F>::headers()
+        self::columns::RangePreprocessedCols::<F>::headers()
     }
 
-    fn main_headers(&self) -> Vec<String> {
-        RangeCols::<F>::headers()
+    fn headers(&self) -> Vec<String> {
+        self::columns::RangeCols::<F>::headers()
     }
 }
 

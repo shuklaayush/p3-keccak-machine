@@ -4,12 +4,10 @@ mod interaction;
 pub mod trace;
 pub mod util;
 
-use alloc::vec::Vec;
-
+#[cfg(feature = "trace-writer")]
 use p3_air_util::TraceWriter;
-use p3_field::{ExtensionField, PrimeField32};
-
-pub(crate) use self::columns::KeccakSpongeCols;
+#[cfg(feature = "trace-writer")]
+use p3_field::{ExtensionField, Field};
 
 /// Strict upper bound for the individual bytes range-check.
 const BYTE_RANGE_MAX: usize = 1usize << 8;
@@ -27,9 +25,9 @@ pub struct KeccakSpongeChip {
 }
 
 #[cfg(feature = "trace-writer")]
-impl<F: PrimeField32, EF: ExtensionField<F>> TraceWriter<F, EF> for KeccakSpongeChip {
-    fn main_headers(&self) -> Vec<String> {
-        KeccakSpongeCols::<F>::headers()
+impl<F: Field, EF: ExtensionField<F>> TraceWriter<F, EF> for KeccakSpongeChip {
+    fn headers(&self) -> Vec<String> {
+        self::columns::KeccakSpongeCols::<F>::headers()
     }
 }
 

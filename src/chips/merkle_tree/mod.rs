@@ -3,12 +3,10 @@ mod columns;
 mod interaction;
 mod trace;
 
-use alloc::vec::Vec;
-
+#[cfg(feature = "trace-writer")]
 use p3_air_util::TraceWriter;
-use p3_field::{ExtensionField, PrimeField32};
-
-use self::columns::MerkleTreeCols;
+#[cfg(feature = "trace-writer")]
+use p3_field::{ExtensionField, Field};
 
 pub(crate) const NUM_U8_HASH_ELEMS: usize = 32;
 
@@ -19,9 +17,9 @@ pub struct MerkleRootChip {
 }
 
 #[cfg(feature = "trace-writer")]
-impl<F: PrimeField32, EF: ExtensionField<F>> TraceWriter<F, EF> for MerkleRootChip {
-    fn main_headers(&self) -> Vec<String> {
-        MerkleTreeCols::<F>::headers()
+impl<F: Field, EF: ExtensionField<F>> TraceWriter<F, EF> for MerkleRootChip {
+    fn headers(&self) -> Vec<String> {
+        self::columns::MerkleRootCols::<F>::headers()
     }
 }
 

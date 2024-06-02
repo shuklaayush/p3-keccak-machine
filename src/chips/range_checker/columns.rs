@@ -1,11 +1,11 @@
-use p3_derive::AirColumns;
+use p3_derive::Columns;
 
-#[derive(Default, AirColumns)]
+#[derive(Default, Columns)]
 pub struct RangeCols<T> {
     pub mult: T,
 }
 
-#[derive(Default, AirColumns)]
+#[derive(Default, Columns)]
 pub struct RangePreprocessedCols<T> {
     pub counter: T,
 }

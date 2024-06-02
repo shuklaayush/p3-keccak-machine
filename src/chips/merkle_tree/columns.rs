@@ -1,11 +1,11 @@
-use p3_derive::AirColumns;
+use p3_derive::Columns;
 
 use crate::airs::keccak::U64_LIMBS;
 use crate::chips::keccak_permute::NUM_U64_HASH_ELEMS;
 
 #[repr(C)]
-#[derive(AirColumns)]
-pub struct MerkleTreeCols<T> {
+#[derive(Columns)]
+pub struct MerkleRootCols<T> {
     pub is_real: T,
 
     pub is_final_step: T,

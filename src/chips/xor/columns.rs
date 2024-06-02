@@ -1,7 +1,7 @@
-use p3_derive::AirColumns;
+use p3_derive::Columns;
 
 #[repr(C)]
-#[derive(AirColumns)]
+#[derive(Columns)]
 pub struct XorCols<T> {
     pub is_real: T,
 

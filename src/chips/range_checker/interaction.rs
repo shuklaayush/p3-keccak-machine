@@ -27,6 +27,6 @@ impl<const MAX: u32, F: Field> InteractionAir<F> for RangeCheckerChip<MAX> {
 
 impl<const MAX: u32, AB: InteractionAirBuilder> Rap<AB> for RangeCheckerChip<MAX> {
     fn preprocessed_width(&self) -> usize {
-        1
+        RangePreprocessedCols::<AB::F>::num_cols()
     }
 }

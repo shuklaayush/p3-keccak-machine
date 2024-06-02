@@ -3,12 +3,10 @@ mod columns;
 mod interaction;
 mod trace;
 
-use alloc::vec::Vec;
-
+#[cfg(feature = "trace-writer")]
 use p3_air_util::TraceWriter;
-use p3_field::{ExtensionField, PrimeField32};
-
-use self::columns::MemoryCols;
+#[cfg(feature = "trace-writer")]
+use p3_field::{ExtensionField, Field};
 
 #[derive(Clone)]
 pub enum OperationKind {
@@ -31,9 +29,9 @@ pub struct MemoryChip {
 }
 
 #[cfg(feature = "trace-writer")]
-impl<F: PrimeField32, EF: ExtensionField<F>> TraceWriter<F, EF> for MemoryChip {
-    fn main_headers(&self) -> Vec<String> {
-        MemoryCols::<F>::headers()
+impl<F: Field, EF: ExtensionField<F>> TraceWriter<F, EF> for MemoryChip {
+    fn headers(&self) -> Vec<String> {
+        self::columns::MemoryCols::<F>::headers()
     }
 }
 

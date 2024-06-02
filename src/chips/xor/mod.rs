@@ -3,12 +3,10 @@ mod columns;
 mod interaction;
 mod trace;
 
-use alloc::vec::Vec;
-
+#[cfg(feature = "trace-writer")]
 use p3_air_util::TraceWriter;
-use p3_field::{ExtensionField, PrimeField32};
-
-use self::columns::XorCols;
+#[cfg(feature = "trace-writer")]
+use p3_field::{ExtensionField, Field};
 
 // TODO: Just proof of concept, should be implemented as lookup.
 //       Can be extended to a general CPU chip.
@@ -19,8 +17,8 @@ pub struct XorChip {
 }
 
 #[cfg(feature = "trace-writer")]
-impl<F: PrimeField32, EF: ExtensionField<F>> TraceWriter<F, EF> for XorChip {
-    fn main_headers(&self) -> Vec<String> {
-        XorCols::<F>::headers()
+impl<F: Field, EF: ExtensionField<F>> TraceWriter<F, EF> for XorChip {
+    fn headers(&self) -> Vec<String> {
+        self::columns::XorCols::<F>::headers()
     }
 }

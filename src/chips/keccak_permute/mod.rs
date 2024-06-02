@@ -3,12 +3,10 @@ mod columns;
 mod interaction;
 pub mod trace;
 
-use alloc::vec::Vec;
-
+#[cfg(feature = "trace-writer")]
 use p3_air_util::TraceWriter;
-use p3_field::{ExtensionField, PrimeField32};
-
-use self::columns::KeccakPermuteCols;
+#[cfg(feature = "trace-writer")]
+use p3_field::{ExtensionField, Field};
 
 pub const NUM_U64_HASH_ELEMS: usize = 4;
 
@@ -22,9 +20,9 @@ pub struct KeccakPermuteChip {
 }
 
 #[cfg(feature = "trace-writer")]
-impl<F: PrimeField32, EF: ExtensionField<F>> TraceWriter<F, EF> for KeccakPermuteChip {
-    fn main_headers(&self) -> Vec<String> {
-        KeccakPermuteCols::<F>::headers()
+impl<F: Field, EF: ExtensionField<F>> TraceWriter<F, EF> for KeccakPermuteChip {
+    fn headers(&self) -> Vec<String> {
+        self::columns::KeccakPermuteCols::<F>::headers()
     }
 }
 
