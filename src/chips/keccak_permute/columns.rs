@@ -1,9 +1,9 @@
-use p3_derive::Columns;
+use p3_derive::Columnar;
 
 use crate::airs::keccak::KeccakCols;
 
 #[repr(C)]
-#[derive(Columns)]
+#[derive(Columnar)]
 pub struct KeccakPermuteCols<T> {
     pub keccak: KeccakCols<T>,
 

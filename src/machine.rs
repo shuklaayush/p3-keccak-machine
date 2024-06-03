@@ -15,11 +15,14 @@ use crate::{
 
 pub struct KeccakMachine {}
 
-impl<'a, SC> Machine<'a, SC, KeccakMachineChip> for KeccakMachine
+impl<'a, SC> Machine<'a, SC> for KeccakMachine
 where
     SC: StarkGenericConfig,
     Val<SC>: PrimeField32,
 {
+    type Chip = KeccakMachineChip;
+    type Bus = KeccakMachineBus;
+
     fn chips(&self) -> Vec<KeccakMachineChip> {
         let keccak_permute_chip = KeccakPermuteChip {
             bus_input: KeccakMachineBus::KeccakPermuteInput as usize,

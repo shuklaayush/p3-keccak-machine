@@ -1,4 +1,4 @@
-use p3_derive::Columns;
+use p3_derive::Columnar;
 
 /// Total number of sponge bytes: number of rate bytes + number of capacity
 /// bytes.
@@ -22,7 +22,7 @@ pub(crate) const KECCAK_DIGEST_BYTES: usize = 32;
 pub(crate) const KECCAK_DIGEST_U16S: usize = KECCAK_DIGEST_BYTES / 2;
 
 #[repr(C)]
-#[derive(Columns)]
+#[derive(Columnar)]
 pub struct KeccakSpongeCols<T> {
     pub timestamp: T,
 

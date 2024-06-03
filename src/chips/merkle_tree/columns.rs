@@ -1,10 +1,10 @@
-use p3_derive::Columns;
+use p3_derive::Columnar;
 
 use crate::airs::keccak::U64_LIMBS;
 use crate::chips::keccak_permute::NUM_U64_HASH_ELEMS;
 
 #[repr(C)]
-#[derive(Columns)]
+#[derive(Columnar)]
 pub struct MerkleRootCols<T> {
     pub is_real: T,
 
