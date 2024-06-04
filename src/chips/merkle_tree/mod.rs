@@ -18,7 +18,7 @@ pub struct MerkleRootChip {
 
 #[cfg(feature = "trace-writer")]
 impl<F: Field, EF: ExtensionField<F>> TraceWriter<F, EF> for MerkleRootChip {
-    fn headers(&self) -> Vec<String> {
+    fn main_headers(&self) -> Vec<String> {
         self::columns::MerkleRootCols::<F>::headers()
     }
 }

@@ -18,7 +18,7 @@ pub struct XorChip {
 
 #[cfg(feature = "trace-writer")]
 impl<F: Field, EF: ExtensionField<F>> TraceWriter<F, EF> for XorChip {
-    fn headers(&self) -> Vec<String> {
+    fn main_headers(&self) -> Vec<String> {
         self::columns::XorCols::<F>::headers()
     }
 }

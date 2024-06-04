@@ -1,16 +1,20 @@
 use itertools::Itertools;
 use p3_air::VirtualPairCol;
 use p3_field::Field;
-use p3_interaction::{Interaction, InteractionAir, InteractionAirBuilder, Rap};
+use p3_interaction::{BaseInteractionAir, Interaction, InteractionAir, InteractionAirBuilder, Rap};
 
 use super::{
     columns::{KeccakSpongeCols, KECCAK_RATE_BYTES},
     KeccakSpongeChip,
 };
 
-impl<F: Field> InteractionAir<F> for KeccakSpongeChip {
-    fn receives(&self) -> Vec<Interaction<F>> {
-        let col_map = KeccakSpongeCols::<F>::col_map();
+impl<F: Field> BaseInteractionAir<F> for KeccakSpongeChip {
+    fn receives_from_indices(
+        &self,
+        _preprocessed_indices: &[usize],
+        main_indices: &[usize],
+    ) -> Vec<Interaction<F>> {
+        let col_map = KeccakSpongeCols::<usize>::from_usize_slice(main_indices);
 
         let is_real = VirtualPairCol::sum_main(vec![
             col_map.is_padding_byte[KECCAK_RATE_BYTES - 1],
@@ -96,8 +100,12 @@ impl<F: Field> InteractionAir<F> for KeccakSpongeChip {
         .concat()
     }
 
-    fn sends(&self) -> Vec<Interaction<F>> {
-        let col_map = KeccakSpongeCols::<F>::col_map();
+    fn sends_from_indices(
+        &self,
+        _preprocessed_indices: &[usize],
+        main_indices: &[usize],
+    ) -> Vec<Interaction<F>> {
+        let col_map = KeccakSpongeCols::<usize>::from_usize_slice(main_indices);
 
         let is_real = VirtualPairCol::sum_main(vec![
             col_map.is_padding_byte[KECCAK_RATE_BYTES - 1],
@@ -152,6 +160,18 @@ impl<F: Field> InteractionAir<F> for KeccakSpongeChip {
                 .collect_vec(),
         ]
         .concat()
+    }
+}
+
+impl<F: Field> InteractionAir<F> for KeccakSpongeChip {
+    fn receives(&self) -> Vec<Interaction<F>> {
+        let col_map = KeccakSpongeCols::<F>::col_map();
+        self.receives_from_main_indices(col_map.as_usize_slice())
+    }
+
+    fn sends(&self) -> Vec<Interaction<F>> {
+        let col_map = KeccakSpongeCols::<F>::col_map();
+        self.sends_from_main_indices(col_map.as_usize_slice())
     }
 }
 

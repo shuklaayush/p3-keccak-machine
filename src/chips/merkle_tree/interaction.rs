@@ -1,12 +1,16 @@
 use p3_air::VirtualPairCol;
 use p3_field::Field;
-use p3_interaction::{Interaction, InteractionAir, InteractionAirBuilder, Rap};
+use p3_interaction::{BaseInteractionAir, Interaction, InteractionAir, InteractionAirBuilder, Rap};
 
 use super::{columns::MerkleRootCols, MerkleRootChip};
 
-impl<F: Field> InteractionAir<F> for MerkleRootChip {
-    fn receives(&self) -> Vec<Interaction<F>> {
-        let col_map = MerkleRootCols::<F>::col_map();
+impl<F: Field> BaseInteractionAir<F> for MerkleRootChip {
+    fn receives_from_indices(
+        &self,
+        _preprocessed_indices: &[usize],
+        main_indices: &[usize],
+    ) -> Vec<Interaction<F>> {
+        let col_map = MerkleRootCols::<usize>::from_usize_slice(main_indices);
         vec![Interaction {
             fields: col_map
                 .output
@@ -19,8 +23,12 @@ impl<F: Field> InteractionAir<F> for MerkleRootChip {
         }]
     }
 
-    fn sends(&self) -> Vec<Interaction<F>> {
-        let col_map = MerkleRootCols::<F>::col_map();
+    fn sends_from_indices(
+        &self,
+        _preprocessed_indices: &[usize],
+        main_indices: &[usize],
+    ) -> Vec<Interaction<F>> {
+        let col_map = MerkleRootCols::<usize>::from_usize_slice(main_indices);
         vec![Interaction {
             fields: col_map
                 .left_node
@@ -32,6 +40,18 @@ impl<F: Field> InteractionAir<F> for MerkleRootChip {
             count: VirtualPairCol::single_main(col_map.is_real),
             argument_index: self.bus_input,
         }]
+    }
+}
+
+impl<F: Field> InteractionAir<F> for MerkleRootChip {
+    fn receives(&self) -> Vec<Interaction<F>> {
+        let col_map = MerkleRootCols::<F>::col_map();
+        self.receives_from_main_indices(col_map.as_usize_slice())
+    }
+
+    fn sends(&self) -> Vec<Interaction<F>> {
+        let col_map = MerkleRootCols::<F>::col_map();
+        self.sends_from_main_indices(col_map.as_usize_slice())
     }
 }
 

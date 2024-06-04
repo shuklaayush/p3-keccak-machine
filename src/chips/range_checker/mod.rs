@@ -19,7 +19,7 @@ impl<const MAX: u32, F: Field, EF: ExtensionField<F>> TraceWriter<F, EF> for Ran
         self::columns::RangePreprocessedCols::<F>::headers()
     }
 
-    fn headers(&self) -> Vec<String> {
+    fn main_headers(&self) -> Vec<String> {
         self::columns::RangeCols::<F>::headers()
     }
 }

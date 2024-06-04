@@ -1,13 +1,18 @@
 use p3_air::VirtualPairCol;
 use p3_field::Field;
-use p3_interaction::{Interaction, InteractionAir, InteractionAirBuilder, Rap};
+use p3_interaction::{BaseInteractionAir, Interaction, InteractionAir, InteractionAirBuilder, Rap};
 
 use super::{columns::KeccakPermuteCols, KeccakPermuteChip, NUM_U64_HASH_ELEMS};
 use crate::airs::keccak::U64_LIMBS;
 
-impl<F: Field> InteractionAir<F> for KeccakPermuteChip {
-    fn receives(&self) -> Vec<Interaction<F>> {
-        let col_map = KeccakPermuteCols::<F>::col_map();
+impl<F: Field> BaseInteractionAir<F> for KeccakPermuteChip {
+    fn receives_from_indices(
+        &self,
+        _preprocessed_indices: &[usize],
+        main_indices: &[usize],
+    ) -> Vec<Interaction<F>> {
+        let col_map = KeccakPermuteCols::<usize>::from_usize_slice(main_indices);
+
         vec![Interaction {
             fields: col_map
                 .keccak
@@ -22,8 +27,13 @@ impl<F: Field> InteractionAir<F> for KeccakPermuteChip {
         }]
     }
 
-    fn sends(&self) -> Vec<Interaction<F>> {
-        let col_map = KeccakPermuteCols::<F>::col_map();
+    fn sends_from_indices(
+        &self,
+        _preprocessed_indices: &[usize],
+        main_indices: &[usize],
+    ) -> Vec<Interaction<F>> {
+        let col_map = KeccakPermuteCols::<usize>::from_usize_slice(main_indices);
+
         vec![
             Interaction {
                 fields: (0..25)
@@ -58,6 +68,18 @@ impl<F: Field> InteractionAir<F> for KeccakPermuteChip {
                 argument_index: self.bus_output_digest,
             },
         ]
+    }
+}
+
+impl<F: Field> InteractionAir<F> for KeccakPermuteChip {
+    fn receives(&self) -> Vec<Interaction<F>> {
+        let col_map = KeccakPermuteCols::<F>::col_map();
+        self.receives_from_main_indices(col_map.as_usize_slice())
+    }
+
+    fn sends(&self) -> Vec<Interaction<F>> {
+        let col_map = KeccakPermuteCols::<F>::col_map();
+        self.sends_from_main_indices(col_map.as_usize_slice())
     }
 }
 

@@ -21,7 +21,7 @@ pub struct KeccakPermuteChip {
 
 #[cfg(feature = "trace-writer")]
 impl<F: Field, EF: ExtensionField<F>> TraceWriter<F, EF> for KeccakPermuteChip {
-    fn headers(&self) -> Vec<String> {
+    fn main_headers(&self) -> Vec<String> {
         self::columns::KeccakPermuteCols::<F>::headers()
     }
 }
