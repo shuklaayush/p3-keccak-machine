@@ -10,7 +10,7 @@ impl<F: Field> BaseInteractionAir<F> for MemoryChip {
         _preprocessed_indices: &[usize],
         main_indices: &[usize],
     ) -> Vec<Interaction<F>> {
-        let col_map = MemoryCols::<usize>::from_usize_slice(main_indices);
+        let col_map = MemoryCols::from_usize_slice(main_indices);
 
         vec![Interaction {
             fields: vec![
@@ -28,7 +28,7 @@ impl<F: Field> BaseInteractionAir<F> for MemoryChip {
         _preprocessed_indices: &[usize],
         main_indices: &[usize],
     ) -> Vec<Interaction<F>> {
-        let col_map = MemoryCols::<usize>::from_usize_slice(main_indices);
+        let col_map = MemoryCols::from_usize_slice(main_indices);
 
         vec![
             // TODO: Combine with is_write?

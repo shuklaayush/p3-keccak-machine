@@ -10,7 +10,7 @@ impl<F: Field> BaseInteractionAir<F> for MerkleRootChip {
         _preprocessed_indices: &[usize],
         main_indices: &[usize],
     ) -> Vec<Interaction<F>> {
-        let col_map = MerkleRootCols::<usize>::from_usize_slice(main_indices);
+        let col_map = MerkleRootCols::from_usize_slice(main_indices);
         vec![Interaction {
             fields: col_map
                 .output
@@ -28,7 +28,7 @@ impl<F: Field> BaseInteractionAir<F> for MerkleRootChip {
         _preprocessed_indices: &[usize],
         main_indices: &[usize],
     ) -> Vec<Interaction<F>> {
-        let col_map = MerkleRootCols::<usize>::from_usize_slice(main_indices);
+        let col_map = MerkleRootCols::from_usize_slice(main_indices);
         vec![Interaction {
             fields: col_map
                 .left_node

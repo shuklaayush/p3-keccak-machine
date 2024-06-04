@@ -13,7 +13,7 @@ impl<F: Field> BaseInteractionAir<F> for XorChip {
         _preprocessed_indices: &[usize],
         main_indices: &[usize],
     ) -> Vec<Interaction<F>> {
-        let col_map = XorCols::<usize>::from_usize_slice(main_indices);
+        let col_map = XorCols::from_usize_slice(main_indices);
         let vc1 = {
             let column_weights = col_map
                 .input1
@@ -44,7 +44,7 @@ impl<F: Field> BaseInteractionAir<F> for XorChip {
         _preprocessed_indices: &[usize],
         main_indices: &[usize],
     ) -> Vec<Interaction<F>> {
-        let col_map = XorCols::<usize>::from_usize_slice(main_indices);
+        let col_map = XorCols::from_usize_slice(main_indices);
         let column_weights = col_map
             .output
             .into_iter()
