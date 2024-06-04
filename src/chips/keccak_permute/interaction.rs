@@ -11,7 +11,7 @@ impl<F: Field> BaseInteractionAir<F> for KeccakPermuteChip {
         _preprocessed_indices: &[usize],
         main_indices: &[usize],
     ) -> Vec<Interaction<F>> {
-        let col_map = KeccakPermuteCols::from_usize_slice(main_indices);
+        let col_map = KeccakPermuteCols::from_slice(main_indices);
 
         vec![Interaction {
             fields: col_map
@@ -32,7 +32,7 @@ impl<F: Field> BaseInteractionAir<F> for KeccakPermuteChip {
         _preprocessed_indices: &[usize],
         main_indices: &[usize],
     ) -> Vec<Interaction<F>> {
-        let col_map = KeccakPermuteCols::from_usize_slice(main_indices);
+        let col_map = KeccakPermuteCols::from_slice(main_indices);
 
         vec![
             Interaction {
@@ -74,12 +74,12 @@ impl<F: Field> BaseInteractionAir<F> for KeccakPermuteChip {
 impl<F: Field> InteractionAir<F> for KeccakPermuteChip {
     fn receives(&self) -> Vec<Interaction<F>> {
         let col_map = KeccakPermuteCols::<F>::col_map();
-        self.receives_from_main_indices(col_map.as_usize_slice())
+        self.receives_from_main_indices(col_map.as_slice())
     }
 
     fn sends(&self) -> Vec<Interaction<F>> {
         let col_map = KeccakPermuteCols::<F>::col_map();
-        self.sends_from_main_indices(col_map.as_usize_slice())
+        self.sends_from_main_indices(col_map.as_slice())
     }
 }
 

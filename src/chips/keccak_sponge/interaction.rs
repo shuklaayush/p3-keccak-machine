@@ -14,7 +14,7 @@ impl<F: Field> BaseInteractionAir<F> for KeccakSpongeChip {
         _preprocessed_indices: &[usize],
         main_indices: &[usize],
     ) -> Vec<Interaction<F>> {
-        let col_map = KeccakSpongeCols::from_usize_slice(main_indices);
+        let col_map = KeccakSpongeCols::from_slice(main_indices);
 
         let is_real = VirtualPairCol::sum_main(vec![
             col_map.is_padding_byte[KECCAK_RATE_BYTES - 1],
@@ -105,7 +105,7 @@ impl<F: Field> BaseInteractionAir<F> for KeccakSpongeChip {
         _preprocessed_indices: &[usize],
         main_indices: &[usize],
     ) -> Vec<Interaction<F>> {
-        let col_map = KeccakSpongeCols::from_usize_slice(main_indices);
+        let col_map = KeccakSpongeCols::from_slice(main_indices);
 
         let is_real = VirtualPairCol::sum_main(vec![
             col_map.is_padding_byte[KECCAK_RATE_BYTES - 1],
@@ -166,12 +166,12 @@ impl<F: Field> BaseInteractionAir<F> for KeccakSpongeChip {
 impl<F: Field> InteractionAir<F> for KeccakSpongeChip {
     fn receives(&self) -> Vec<Interaction<F>> {
         let col_map = KeccakSpongeCols::<F>::col_map();
-        self.receives_from_main_indices(col_map.as_usize_slice())
+        self.receives_from_main_indices(col_map.as_slice())
     }
 
     fn sends(&self) -> Vec<Interaction<F>> {
         let col_map = KeccakSpongeCols::<F>::col_map();
-        self.sends_from_main_indices(col_map.as_usize_slice())
+        self.sends_from_main_indices(col_map.as_slice())
     }
 }
 

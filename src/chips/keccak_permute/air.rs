@@ -33,8 +33,7 @@ impl<AB: AirBuilder> Air<AB> for KeccakPermuteChip {
         );
 
         let keccak_air = KeccakAir {};
-        let mut sub_builder =
-            SubRangeAirBuilder::new_main(builder, col_map.keccak.as_usize_range());
+        let mut sub_builder = SubRangeAirBuilder::new_main(builder, col_map.keccak.as_range());
         keccak_air.eval(&mut sub_builder);
     }
 }

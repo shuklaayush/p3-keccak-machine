@@ -16,8 +16,8 @@ impl<const MAX: u32, F: Field> BaseInteractionAir<F> for RangeCheckerChip<MAX> {
         preprocessed_indices: &[usize],
         main_indices: &[usize],
     ) -> Vec<Interaction<F>> {
-        let preprocessed_col_map = RangePreprocessedCols::from_usize_slice(preprocessed_indices);
-        let main_col_map = RangeCols::from_usize_slice(main_indices);
+        let preprocessed_col_map = RangePreprocessedCols::from_slice(preprocessed_indices);
+        let main_col_map = RangeCols::from_slice(main_indices);
 
         vec![Interaction {
             fields: vec![VirtualPairCol::single_preprocessed(
@@ -34,10 +34,7 @@ impl<const MAX: u32, F: Field> InteractionAir<F> for RangeCheckerChip<MAX> {
         let preprocessed_col_map = RangePreprocessedCols::<F>::col_map();
         let main_col_map = RangeCols::<F>::col_map();
 
-        self.receives_from_indices(
-            preprocessed_col_map.as_usize_slice(),
-            main_col_map.as_usize_slice(),
-        )
+        self.receives_from_indices(preprocessed_col_map.as_slice(), main_col_map.as_slice())
     }
 }
 

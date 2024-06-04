@@ -10,7 +10,7 @@ impl<F: Field> BaseInteractionAir<F> for MerkleRootChip {
         _preprocessed_indices: &[usize],
         main_indices: &[usize],
     ) -> Vec<Interaction<F>> {
-        let col_map = MerkleRootCols::from_usize_slice(main_indices);
+        let col_map = MerkleRootCols::from_slice(main_indices);
         vec![Interaction {
             fields: col_map
                 .output
@@ -28,7 +28,7 @@ impl<F: Field> BaseInteractionAir<F> for MerkleRootChip {
         _preprocessed_indices: &[usize],
         main_indices: &[usize],
     ) -> Vec<Interaction<F>> {
-        let col_map = MerkleRootCols::from_usize_slice(main_indices);
+        let col_map = MerkleRootCols::from_slice(main_indices);
         vec![Interaction {
             fields: col_map
                 .left_node
@@ -46,12 +46,12 @@ impl<F: Field> BaseInteractionAir<F> for MerkleRootChip {
 impl<F: Field> InteractionAir<F> for MerkleRootChip {
     fn receives(&self) -> Vec<Interaction<F>> {
         let col_map = MerkleRootCols::<F>::col_map();
-        self.receives_from_main_indices(col_map.as_usize_slice())
+        self.receives_from_main_indices(col_map.as_slice())
     }
 
     fn sends(&self) -> Vec<Interaction<F>> {
         let col_map = MerkleRootCols::<F>::col_map();
-        self.sends_from_main_indices(col_map.as_usize_slice())
+        self.sends_from_main_indices(col_map.as_slice())
     }
 }
 
