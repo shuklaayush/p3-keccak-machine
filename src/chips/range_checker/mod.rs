@@ -3,24 +3,27 @@ mod columns;
 mod interaction;
 mod trace;
 
-#[cfg(feature = "trace-writer")]
-use p3_air_util::TraceWriter;
-#[cfg(feature = "trace-writer")]
-use p3_field::{ExtensionField, Field};
-
 #[derive(Default, Clone, Debug)]
 pub struct RangeCheckerChip<const MAX: u32> {
     pub bus_range_8: usize,
 }
 
-#[cfg(feature = "trace-writer")]
-impl<const MAX: u32, F: Field, EF: ExtensionField<F>> TraceWriter<F, EF> for RangeCheckerChip<MAX> {
+#[cfg(feature = "air-logger")]
+impl<const MAX: u32> p3_air_util::AirLogger for RangeCheckerChip<MAX> {
     fn preprocessed_headers(&self) -> Vec<String> {
-        self::columns::RangePreprocessedCols::<F>::headers()
+        self::columns::RangePreprocessedCols::<usize>::headers()
     }
 
     fn main_headers(&self) -> Vec<String> {
-        self::columns::RangeCols::<F>::headers()
+        self::columns::RangeCols::<usize>::headers()
+    }
+
+    fn preprocessed_headers_and_types(&self) -> Vec<(String, String, core::ops::Range<usize>)> {
+        self::columns::RangePreprocessedCols::<usize>::headers_and_types()
+    }
+
+    fn main_headers_and_types(&self) -> Vec<(String, String, core::ops::Range<usize>)> {
+        self::columns::RangeCols::<usize>::headers_and_types()
     }
 }
 

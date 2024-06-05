@@ -1,5 +1,5 @@
+use core::fmt::Debug;
 use p3_derive::EnumDispatch;
-use std::fmt::Debug;
 
 pub mod keccak_permute;
 pub mod keccak_sponge;

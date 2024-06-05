@@ -3,26 +3,24 @@ mod columns;
 mod interaction;
 pub mod trace;
 
-#[cfg(feature = "trace-writer")]
-use p3_air_util::TraceWriter;
-#[cfg(feature = "trace-writer")]
-use p3_field::{ExtensionField, Field};
-
 pub const NUM_U64_HASH_ELEMS: usize = 4;
 
 /// Assumes the field size is at least 16 bits.
 #[derive(Clone, Debug)]
 pub struct KeccakPermuteChip {
     pub bus_input: usize,
-
     pub bus_output_full: usize,
     pub bus_output_digest: usize,
 }
 
-#[cfg(feature = "trace-writer")]
-impl<F: Field, EF: ExtensionField<F>> TraceWriter<F, EF> for KeccakPermuteChip {
+#[cfg(feature = "air-logger")]
+impl p3_air_util::AirLogger for KeccakPermuteChip {
     fn main_headers(&self) -> Vec<String> {
-        self::columns::KeccakPermuteCols::<F>::headers()
+        self::columns::KeccakPermuteCols::<usize>::headers()
+    }
+
+    fn main_headers_and_types(&self) -> Vec<(String, String, core::ops::Range<usize>)> {
+        self::columns::KeccakPermuteCols::<usize>::headers_and_types()
     }
 }
 

@@ -1,8 +1,6 @@
 use alloc::vec::Vec;
 
-use p3_field::PrimeField32;
 use p3_machine::machine::Machine;
-use p3_uni_stark::{StarkGenericConfig, Val};
 
 use crate::{
     bus::KeccakMachineBus,
@@ -13,44 +11,40 @@ use crate::{
     },
 };
 
-pub struct KeccakMachine {}
+pub struct KeccakMachine;
 
-impl<'a, SC> Machine<'a, SC> for KeccakMachine
-where
-    SC: StarkGenericConfig,
-    Val<SC>: PrimeField32,
-{
+impl Machine for KeccakMachine {
     type Chip = KeccakMachineChip;
     type Bus = KeccakMachineBus;
 
     fn chips(&self) -> Vec<KeccakMachineChip> {
         let keccak_permute_chip = KeccakPermuteChip {
-            bus_input: KeccakMachineBus::KeccakPermuteInput as usize,
-            bus_output_full: KeccakMachineBus::KeccakPermuteOutputFull as usize,
-            bus_output_digest: KeccakMachineBus::KeccakPermuteOutputDigest as usize,
+            bus_input: KeccakMachineBus::KeccakPermuteInputBus as usize,
+            bus_output_full: KeccakMachineBus::KeccakPermuteOutputFullBus as usize,
+            bus_output_digest: KeccakMachineBus::KeccakPermuteOutputDigestBus as usize,
         };
         let keccak_sponge_chip = KeccakSpongeChip {
-            bus_xor_input: KeccakMachineBus::XorInput as usize,
-            bus_xor_output: KeccakMachineBus::XorOutput as usize,
-            bus_permute_input: KeccakMachineBus::KeccakPermuteInput as usize,
-            bus_permute_output: KeccakMachineBus::KeccakPermuteOutputFull as usize,
-            bus_range_8: KeccakMachineBus::Range8 as usize,
-            bus_memory: KeccakMachineBus::Memory as usize,
+            bus_xor_input: KeccakMachineBus::XorInputBus as usize,
+            bus_xor_output: KeccakMachineBus::XorOutputBus as usize,
+            bus_permute_input: KeccakMachineBus::KeccakPermuteInputBus as usize,
+            bus_permute_output: KeccakMachineBus::KeccakPermuteOutputFullBus as usize,
+            bus_range_8: KeccakMachineBus::Range8Bus as usize,
+            bus_memory: KeccakMachineBus::MemoryBus as usize,
         };
         let merkle_tree_chip = MerkleRootChip {
-            bus_input: KeccakMachineBus::KeccakPermuteInput as usize,
-            bus_output: KeccakMachineBus::KeccakPermuteOutputDigest as usize,
+            bus_input: KeccakMachineBus::KeccakPermuteInputBus as usize,
+            bus_output: KeccakMachineBus::KeccakPermuteOutputDigestBus as usize,
         };
         let range_chip = RangeCheckerChip {
-            bus_range_8: KeccakMachineBus::Range8 as usize,
+            bus_range_8: KeccakMachineBus::Range8Bus as usize,
         };
         let xor_chip = XorChip {
-            bus_input: KeccakMachineBus::XorInput as usize,
-            bus_output: KeccakMachineBus::XorOutput as usize,
+            bus_input: KeccakMachineBus::XorInputBus as usize,
+            bus_output: KeccakMachineBus::XorOutputBus as usize,
         };
         let memory_chip = MemoryChip {
-            bus_memory: KeccakMachineBus::Memory as usize,
-            bus_range_8: KeccakMachineBus::Range8 as usize,
+            bus_memory: KeccakMachineBus::MemoryBus as usize,
+            bus_range_8: KeccakMachineBus::Range8Bus as usize,
         };
 
         vec![

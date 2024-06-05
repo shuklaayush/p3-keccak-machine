@@ -4,11 +4,6 @@ mod interaction;
 pub mod trace;
 pub mod util;
 
-#[cfg(feature = "trace-writer")]
-use p3_air_util::TraceWriter;
-#[cfg(feature = "trace-writer")]
-use p3_field::{ExtensionField, Field};
-
 /// Strict upper bound for the individual bytes range-check.
 const BYTE_RANGE_MAX: usize = 1usize << 8;
 
@@ -24,10 +19,14 @@ pub struct KeccakSpongeChip {
     pub bus_permute_output: usize,
 }
 
-#[cfg(feature = "trace-writer")]
-impl<F: Field, EF: ExtensionField<F>> TraceWriter<F, EF> for KeccakSpongeChip {
+#[cfg(feature = "air-logger")]
+impl p3_air_util::AirLogger for KeccakSpongeChip {
     fn main_headers(&self) -> Vec<String> {
-        self::columns::KeccakSpongeCols::<F>::headers()
+        self::columns::KeccakSpongeCols::<usize>::headers()
+    }
+
+    fn main_headers_and_types(&self) -> Vec<(String, String, core::ops::Range<usize>)> {
+        self::columns::KeccakSpongeCols::<usize>::headers_and_types()
     }
 }
 

@@ -3,11 +3,6 @@ mod columns;
 mod interaction;
 mod trace;
 
-#[cfg(feature = "trace-writer")]
-use p3_air_util::TraceWriter;
-#[cfg(feature = "trace-writer")]
-use p3_field::{ExtensionField, Field};
-
 // TODO: Just proof of concept, should be implemented as lookup.
 //       Can be extended to a general CPU chip.
 #[derive(Clone, Debug)]
@@ -16,9 +11,13 @@ pub struct XorChip {
     pub bus_output: usize,
 }
 
-#[cfg(feature = "trace-writer")]
-impl<F: Field, EF: ExtensionField<F>> TraceWriter<F, EF> for XorChip {
+#[cfg(feature = "air-logger")]
+impl p3_air_util::AirLogger for XorChip {
     fn main_headers(&self) -> Vec<String> {
-        self::columns::XorCols::<F>::headers()
+        self::columns::XorCols::<usize>::headers()
+    }
+
+    fn main_headers_and_types(&self) -> Vec<(String, String, core::ops::Range<usize>)> {
+        self::columns::XorCols::<usize>::headers_and_types()
     }
 }

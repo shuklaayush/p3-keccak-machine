@@ -46,7 +46,7 @@ pub fn generate_trace_rows<F: PrimeField64>(
     inputs: &[KeccakSpongeOp],
 ) {
     let mut offset = 0;
-    for op in inputs {
+    for op in inputs.iter() {
         let len = op.input.len() / KECCAK_RATE_BYTES + 1;
         let input_rows = &mut rows[offset..offset + len];
         generate_rows_for_op(input_rows, op);
@@ -76,7 +76,7 @@ fn generate_rows_for_op<F: PrimeField64>(rows: &mut [KeccakSpongeCols<F>], op: &
     let mut already_absorbed_bytes = 0;
     for (row, block) in rows.iter_mut().zip(input_blocks.by_ref()) {
         // We compute the updated state of the sponge.
-        generate_full_input_row(
+        generate_full_input_row::<F>(
             row,
             op,
             already_absorbed_bytes,

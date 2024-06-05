@@ -21,10 +21,16 @@ p3-symmetric = { git = "https://github.com/Plonky3/Plonky3.git" }
 p3-uni-stark = { git = "https://github.com/Plonky3/Plonky3.git" }
 p3-util = { git = "https://github.com/Plonky3/Plonky3.git" }
 
-p3-air-util = { git = "https://github.com/shuklaayush/p3-utils.git" }
 p3-derive = { git = "https://github.com/shuklaayush/p3-utils.git" }
-p3-interaction = { git = "https://github.com/shuklaayush/p3-utils.git" }
-p3-machine = { git = "https://github.com/shuklaayush/p3-utils.git" }
+p3-air-util = { git = "https://github.com/shuklaayush/p3-utils.git", features = [
+    "std",
+] }
+p3-interaction = { git = "https://github.com/shuklaayush/p3-utils.git", features = [
+    "std",
+] }
+p3-machine = { git = "https://github.com/shuklaayush/p3-utils.git", features = [
+    "std",
+] }
 
 itertools = "0.12.1"
 rand = "0.8.5"
@@ -39,14 +45,37 @@ tiny-keccak = "2.0.2"
 
 [features]
 default = []
-trace-writer = [
-    "p3-air-util/trace-writer",
-    "p3-derive/trace-writer",
-    "p3-machine/trace-writer",
+air-logger = [
+    "p3-air-util/air-logger",
+    "p3-derive/air-logger",
+    "p3-machine/air-logger",
 ]
 
-# [patch."https://github.com/shuklaayush/p3-utils.git"]
-# p3-air-util = { path = "../p3-utils/air-util" }
-# p3-derive = { path = "../p3-utils/derive" }
-# p3-interaction = { path = "../p3-utils/interaction" }
-# p3-machine = { path = "../p3-utils/machine" }
+[[bin]]
+name = "write-schema"
+path = "src/bin/write_schema.rs"
+required-features = ["air-logger", "p3-machine/schema"]
+
+[patch."https://github.com/shuklaayush/p3-utils.git"]
+p3-air-util = { path = "../p3-utils/air-util" }
+p3-derive = { path = "../p3-utils/derive" }
+p3-interaction = { path = "../p3-utils/interaction" }
+p3-machine = { path = "../p3-utils/machine" }
+
+# [patch."https://github.com/Plonky3/Plonky3.git"]
+# p3-air = { path = "../Plonky3/air" }
+# p3-baby-bear = { path = "../Plonky3/baby-bear" }
+# p3-challenger = { path = "../Plonky3/challenger" }
+# p3-commit = { path = "../Plonky3/commit" }
+# p3-dft = { path = "../Plonky3/dft" }
+# p3-field = { path = "../Plonky3/field" }
+# p3-fri = { path = "../Plonky3/fri" }
+# p3-keccak = { path = "../Plonky3/keccak" }
+# p3-matrix = { path = "../Plonky3/matrix" }
+# p3-maybe-rayon = { path = "../Plonky3/maybe-rayon" }
+# p3-mds = { path = "../Plonky3/mds" }
+# p3-merkle-tree = { path = "../Plonky3/merkle-tree" }
+# p3-poseidon2 = { path = "../Plonky3/poseidon2" }
+# p3-symmetric = { path = "../Plonky3/symmetric" }
+# p3-uni-stark = { path = "../Plonky3/uni-stark" }
+# p3-util = { path = "../Plonky3/util" }

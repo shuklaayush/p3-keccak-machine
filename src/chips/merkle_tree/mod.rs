@@ -3,11 +3,6 @@ mod columns;
 mod interaction;
 mod trace;
 
-#[cfg(feature = "trace-writer")]
-use p3_air_util::TraceWriter;
-#[cfg(feature = "trace-writer")]
-use p3_field::{ExtensionField, Field};
-
 pub(crate) const NUM_U8_HASH_ELEMS: usize = 32;
 
 #[derive(Default, Clone, Debug)]
@@ -16,10 +11,13 @@ pub struct MerkleRootChip {
     pub bus_output: usize,
 }
 
-#[cfg(feature = "trace-writer")]
-impl<F: Field, EF: ExtensionField<F>> TraceWriter<F, EF> for MerkleRootChip {
+#[cfg(feature = "air-logger")]
+impl p3_air_util::AirLogger for MerkleRootChip {
     fn main_headers(&self) -> Vec<String> {
-        self::columns::MerkleRootCols::<F>::headers()
+        self::columns::MerkleRootCols::<usize>::headers()
+    }
+    fn main_headers_and_types(&self) -> Vec<(String, String, core::ops::Range<usize>)> {
+        self::columns::MerkleRootCols::<usize>::headers_and_types()
     }
 }
 
