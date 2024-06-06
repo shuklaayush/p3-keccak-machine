@@ -20,17 +20,6 @@ impl<AB: AirBuilder> Air<AB> for KeccakSpongeChip {
         let local: &KeccakSpongeCols<AB::Var> = (*local).borrow();
         let next: &KeccakSpongeCols<AB::Var> = (*next).borrow();
 
-        // // Check the range column: First value must be 0, last row
-        // // must be 255, and intermediate rows must increment by 0
-        // // or 1.
-        // let rc1 = local.range_counter;
-        // let rc2 = next.range_counter;
-        // builder.when_first_row().assert_zero(rc1);
-        // let incr = rc2 - rc1;
-        // builder.when_transition().assert_bool(incr);
-        // let range_max = AB::Expr::from_canonical_u64((BYTE_RANGE_MAX - 1) as u64);
-        // builder.when_last_row().assert_eq(rc1, range_max);
-
         // Each flag (full-input block, final block, padding byte or implied dummy flag)
         // must be boolean.
         let is_full_input_block = local.is_full_input_block;

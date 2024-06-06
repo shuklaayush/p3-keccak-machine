@@ -3,6 +3,7 @@ use p3_field::Field;
 use p3_interaction::{BaseInteractionAir, Interaction, InteractionAir, InteractionAirBuilder, Rap};
 
 use super::{columns::MerkleRootCols, MerkleRootChip};
+use crate::chips::keccak_sponge::columns::KECCAK_RATE_BYTES;
 
 impl<F, const DEPTH: usize, const DIGEST_WIDTH: usize> BaseInteractionAir<F>
     for MerkleRootChip<DEPTH, DIGEST_WIDTH>
@@ -38,6 +39,17 @@ where
                 .into_iter()
                 .chain(col_map.right_node.into_iter())
                 .map(|elem| VirtualPairCol::single_main(elem))
+                .chain((2 * DIGEST_WIDTH..KECCAK_RATE_BYTES).map(|i| {
+                    VirtualPairCol::constant({
+                        if i == 2 * DIGEST_WIDTH {
+                            F::one()
+                        } else if i == KECCAK_RATE_BYTES - 1 {
+                            F::from_canonical_u8(0b10000000)
+                        } else {
+                            F::zero()
+                        }
+                    })
+                }))
                 .collect(),
             count: VirtualPairCol::single_main(col_map.is_real),
             argument_index: self.bus_hasher_input,

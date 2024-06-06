@@ -76,7 +76,7 @@ impl<F: Field> BaseInteractionAir<F> for KeccakSpongeChip {
             //     })
             //     .collect_vec(),
             vec![Interaction {
-                fields: (0..2 * KECCAK_DIGEST_BYTES)
+                fields: (0..KECCAK_RATE_BYTES)
                     .map(|i| VirtualPairCol::single_main(col_map.block_bytes[i]))
                     .collect_vec(),
                 count: is_real.clone(),
