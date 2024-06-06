@@ -27,7 +27,7 @@ impl<AB: AirBuilder, const N: usize> Air<AB> for StepFlagsAir<N> {
         for i in 0..N {
             let current_flag = local.flags[i];
             let next_flag = next.flags[(i + 1) % N];
-            builder.assert_eq(next_flag, current_flag);
+            builder.when_transition().assert_eq(next_flag, current_flag);
         }
     }
 }

@@ -29,12 +29,12 @@ where
         let local: &MerkleRootCols<AB::Var, DEPTH, DIGEST_WIDTH> = (*local).borrow();
         let next: &MerkleRootCols<AB::Var, DEPTH, DIGEST_WIDTH> = (*next).borrow();
 
+        builder.assert_bool(local.is_real);
+        builder.assert_bool(local.is_right_child);
+
         let step_flags_air = StepFlagsAir::<DEPTH>;
         let mut sub_builder = SubRangeAirBuilder::new_main(builder, col_map.step_flags.as_range());
         step_flags_air.eval(&mut sub_builder);
-
-        builder.assert_bool(local.is_real);
-        builder.assert_bool(local.is_right_child);
 
         let is_first_step = local.step_flags.flags[0];
         let is_final_step = local.step_flags.flags[DEPTH - 1];
@@ -68,6 +68,7 @@ where
         // Output is copied to the next row.
         for i in 0..DIGEST_WIDTH {
             builder
+                .when_transition()
                 .when_ne(is_final_step, AB::Expr::one())
                 .assert_eq(local.output[i], next.node[i]);
         }

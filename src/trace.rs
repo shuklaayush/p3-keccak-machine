@@ -1,40 +1,39 @@
-use std::collections::BTreeMap;
-
 use itertools::Itertools;
 use p3_field::PrimeField32;
-use p3_keccak::KeccakF;
 use p3_matrix::dense::RowMajorMatrix;
-use p3_symmetric::TruncatedPermutation;
+use p3_symmetric::CompressionFunction;
 use p3_uni_stark::{StarkGenericConfig, Val};
 
 use crate::chips::{
-    keccak_permute::{
-        trace::{KeccakPermuteOp, KeccakPermuteOpType},
-        KeccakPermuteChip,
-    },
+    keccak_permute::{trace::KeccakPermuteOp, KeccakPermuteChip},
     keccak_sponge::{
-        columns::KECCAK_RATE_BYTES, trace::KeccakSpongeOp, util::keccakf_u8s, KeccakSpongeChip,
+        columns::{KECCAK_RATE_BYTES, KECCAK_WIDTH_BYTES},
+        trace::KeccakSpongeOp,
+        KeccakSpongeChip,
     },
-    memory::{MemoryChip, MemoryOp, OperationKind},
     merkle_tree::{MerkleRootChip, MerkleRootOp},
-    range_checker::RangeCheckerChip,
     xor::XorChip,
     DIGEST_WIDTH, MERKLE_TREE_DEPTH,
 };
 
 // TODO: Proper execution function for the machine that minimizes redundant computation
 // Store logs/events during execution first and then generate the traces
-pub fn generate_machine_trace<SC: StarkGenericConfig>(
-    preimage_bytes: Vec<u8>,
-    digests: Vec<Vec<[u8; DIGEST_WIDTH]>>,
+pub fn generate_machine_trace<SC, Compress>(
     leaf_index: usize,
+    digests: Vec<Vec<[u8; DIGEST_WIDTH]>>,
+    hasher: &Compress,
 ) -> Vec<Option<RowMajorMatrix<Val<SC>>>>
 where
+    SC: StarkGenericConfig,
+    Compress: CompressionFunction<[u8; DIGEST_WIDTH], 2>,
     Val<SC>: PrimeField32,
 {
     let leaf_hash = digests[0][leaf_index];
     let siblings: [[u8; DIGEST_WIDTH]; MERKLE_TREE_DEPTH] = (0..MERKLE_TREE_DEPTH)
-        .map(|i| digests[i][(leaf_index >> i) ^ 1])
+        .map(|i| {
+            let depth_index = leaf_index >> i;
+            digests[i][depth_index ^ 1]
+        })
         .collect::<Vec<[u8; DIGEST_WIDTH]>>()
         .try_into()
         .unwrap();
@@ -44,7 +43,7 @@ where
         siblings,
     };
 
-    let mut keccak_inputs = (0..MERKLE_TREE_DEPTH)
+    let keccak_inputs = (0..MERKLE_TREE_DEPTH)
         .map(|i| {
             let index = leaf_index >> i;
             let parity = index & 1;
@@ -53,141 +52,49 @@ where
             } else {
                 (digests[i][index ^ 1], digests[i][index])
             };
-            let mut input = [0; 25];
-            input[0..4].copy_from_slice(
-                left.chunks_exact(8)
-                    .map(|c| u64::from_le_bytes(c.try_into().unwrap()))
-                    .collect_vec()
-                    .as_slice(),
-            );
-            input[4..8].copy_from_slice(
-                right
-                    .chunks_exact(8)
-                    .map(|c| u64::from_le_bytes(c.try_into().unwrap()))
-                    .collect_vec()
-                    .as_slice(),
-            );
-            KeccakPermuteOp {
+            let input = left.into_iter().chain(right).collect_vec();
+            KeccakSpongeOp {
+                timestamp: 0,
+                addr: 0,
                 input,
-                op_type: KeccakPermuteOpType::Digest,
             }
         })
         .collect_vec();
 
-    let keccak_hasher = TruncatedPermutation::new(KeccakF {});
     let merkle_tree_trace =
-        MerkleRootChip::<MERKLE_TREE_DEPTH, DIGEST_WIDTH>::generate_trace(vec![op], &keccak_hasher);
-
-    let keccak_sponge_trace = KeccakSpongeChip::generate_trace(vec![KeccakSpongeOp {
-        timestamp: 0,
-        addr: 0,
-        input: preimage_bytes.clone(),
-    }]);
-
-    let memory_ops = preimage_bytes
-        .iter()
-        .enumerate()
-        .map(|(i, &b)| MemoryOp {
-            addr: i as u32,
-            // TODO: Use proper timestamp
-            timestamp: 0,
-            value: b,
-            kind: OperationKind::Read,
-        })
-        .collect_vec();
-    let memory_trace = MemoryChip::generate_trace(memory_ops.clone());
-
-    let preimage_len = preimage_bytes.len();
-
-    let mut padded_preimage = preimage_bytes.clone();
-    let padding_len = KECCAK_RATE_BYTES - (preimage_len % KECCAK_RATE_BYTES);
-    padded_preimage.resize(preimage_len + padding_len, 0);
-    padded_preimage[preimage_len] = 1;
-    *padded_preimage.last_mut().unwrap() |= 0b10000000;
+        MerkleRootChip::<MERKLE_TREE_DEPTH, DIGEST_WIDTH>::generate_trace(vec![op], hasher);
 
     let mut xor_inputs = Vec::new();
+    let permute_inputs = keccak_inputs
+        .iter()
+        .map(|op| {
+            let mut bytes_input = [0; KECCAK_WIDTH_BYTES];
+            bytes_input[0..2 * DIGEST_WIDTH].copy_from_slice(&op.input);
+            bytes_input[2 * DIGEST_WIDTH] = 1;
+            bytes_input[KECCAK_RATE_BYTES - 1] |= 0b10000000;
 
-    let mut state = [0u8; 200];
-    let keccak_inputs_full = padded_preimage
-        .chunks(KECCAK_RATE_BYTES)
-        .map(|b| {
-            state[..KECCAK_RATE_BYTES]
-                .chunks(4)
-                .zip_eq(b.chunks(4))
-                .for_each(|(s, b)| {
-                    xor_inputs.push((b.try_into().unwrap(), s.try_into().unwrap()));
-                });
-            state[..KECCAK_RATE_BYTES]
-                .iter_mut()
-                .zip_eq(b.iter())
-                .for_each(|(s, b)| {
-                    *s ^= *b;
-                });
-            let input: [u64; 25] = state
+            bytes_input[0..KECCAK_RATE_BYTES].chunks(4).for_each(|val| {
+                xor_inputs.push((val.try_into().unwrap(), [0; 4]));
+            });
+            let input = bytes_input
                 .chunks_exact(8)
                 .map(|c| u64::from_le_bytes(c.try_into().unwrap()))
                 .collect_vec()
                 .try_into()
                 .unwrap();
-
-            keccakf_u8s(&mut state);
-            input
+            KeccakPermuteOp { input }
         })
         .collect_vec();
-    keccak_inputs.extend(keccak_inputs_full.into_iter().map(|input| KeccakPermuteOp {
-        input,
-        op_type: KeccakPermuteOpType::Full,
-    }));
+    let keccak_sponge_trace = KeccakSpongeChip::generate_trace(keccak_inputs);
 
-    let keccak_permute_trace = KeccakPermuteChip::generate_trace(keccak_inputs);
-
-    let mut range_counts = BTreeMap::new();
-    // TODO: This is wrong, should be just the preimage
-    for byte in padded_preimage {
-        range_counts
-            .entry(byte as u32)
-            .and_modify(|c| *c += 1)
-            .or_insert(1);
-    }
-    for (i, op) in memory_ops.iter().enumerate() {
-        let diff = if i > 0 {
-            let op_prev = &memory_ops[i - 1];
-            if op.addr == op_prev.addr {
-                op.timestamp - op_prev.timestamp
-            } else {
-                op.addr - op_prev.addr - 1
-            }
-        } else {
-            0
-        };
-        let diff_limb_lo = diff % (1 << 8);
-        let diff_limb_md = (diff >> 8) % (1 << 8);
-        let diff_limb_hi = (diff >> 16) % (1 << 8);
-
-        range_counts
-            .entry(diff_limb_lo)
-            .and_modify(|c| *c += 1)
-            .or_insert(1);
-        range_counts
-            .entry(diff_limb_md)
-            .and_modify(|c| *c += 1)
-            .or_insert(1);
-        range_counts
-            .entry(diff_limb_hi)
-            .and_modify(|c| *c += 1)
-            .or_insert(1);
-    }
-
-    let range_trace = RangeCheckerChip::<256>::generate_trace(range_counts);
+    let keccak_permute_trace = KeccakPermuteChip::generate_trace(permute_inputs);
 
     let xor_trace = XorChip::generate_trace(xor_inputs);
 
     vec![
-        Some(keccak_permute_trace),
-        Some(keccak_sponge_trace),
         Some(merkle_tree_trace),
-        Some(range_trace),
+        Some(keccak_sponge_trace),
         Some(xor_trace),
-        Some(memory_trace),
+        Some(keccak_permute_trace),
     ]
 }

@@ -67,10 +67,4 @@ pub struct KeccakSpongeCols<T> {
     /// permutation is applied. This also represents the output digest of
     /// the Keccak sponge during the squeezing phase.
     pub updated_digest_state_bytes: [T; KECCAK_DIGEST_BYTES],
-
-    /// The counter column (used for the range check) starts from 0 and
-    /// increments.
-    pub range_counter: T,
-    /// The frequencies column used in logUp.
-    pub rc_frequencies: T,
 }

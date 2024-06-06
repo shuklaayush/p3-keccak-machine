@@ -18,19 +18,11 @@ where
         vec![Interaction {
             fields: col_map
                 .output
-                .chunks_exact(2)
-                .map(|limbs| {
-                    VirtualPairCol::new_main(
-                        vec![
-                            (limbs[0], F::one()),
-                            (limbs[1], F::from_canonical_usize(1 << 8)),
-                        ],
-                        F::zero(),
-                    )
-                })
+                .into_iter()
+                .map(|elem| VirtualPairCol::single_main(elem))
                 .collect(),
             count: VirtualPairCol::single_main(col_map.is_real),
-            argument_index: self.bus_output,
+            argument_index: self.bus_hasher_output,
         }]
     }
 
@@ -43,20 +35,12 @@ where
         vec![Interaction {
             fields: col_map
                 .left_node
-                .chunks_exact(2)
-                .chain(col_map.right_node.chunks(2))
-                .map(|limbs| {
-                    VirtualPairCol::new_main(
-                        vec![
-                            (limbs[0], F::one()),
-                            (limbs[1], F::from_canonical_usize(1 << 8)),
-                        ],
-                        F::zero(),
-                    )
-                })
+                .into_iter()
+                .chain(col_map.right_node.into_iter())
+                .map(|elem| VirtualPairCol::single_main(elem))
                 .collect(),
             count: VirtualPairCol::single_main(col_map.is_real),
-            argument_index: self.bus_input,
+            argument_index: self.bus_hasher_input,
         }]
     }
 }

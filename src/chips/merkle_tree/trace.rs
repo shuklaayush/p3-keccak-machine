@@ -1,6 +1,7 @@
+use itertools::Itertools;
 use p3_field::PrimeField32;
-use p3_matrix::dense::RowMajorMatrix;
-use p3_symmetric::PseudoCompressionFunction;
+use p3_matrix::{dense::RowMajorMatrix, Matrix};
+use p3_symmetric::CompressionFunction;
 use tracing::instrument;
 
 use super::{columns::MerkleRootCols, MerkleRootChip};
@@ -39,7 +40,7 @@ impl<const DEPTH: usize, const DIGEST_WIDTH: usize> MerkleRootChip<DEPTH, DIGEST
     where
         F: PrimeField32,
         T: Default + Copy + Into<u32>,
-        Compress: PseudoCompressionFunction<[T; DIGEST_WIDTH], 2>,
+        Compress: CompressionFunction<[T; DIGEST_WIDTH], 2>,
     {
         let num_cols = MerkleRootCols::<F, DEPTH, DIGEST_WIDTH>::num_cols();
 
@@ -64,7 +65,7 @@ impl<const DEPTH: usize, const DIGEST_WIDTH: usize> MerkleRootChip<DEPTH, DIGEST
         }
 
         // Fill padding rows
-        for input_rows in rows.chunks_mut(DEPTH).skip(num_real_rows) {
+        for input_rows in rows.chunks_mut(DEPTH).skip(operations.len()) {
             let op = MerkleRootOp::default();
             generate_trace_rows_for_op(input_rows, &op, hasher);
         }
@@ -80,7 +81,7 @@ pub fn generate_trace_rows_for_op<F, T, Compress, const DEPTH: usize, const DIGE
 ) where
     F: PrimeField32,
     T: Default + Copy + Into<u32>,
-    Compress: PseudoCompressionFunction<[T; DIGEST_WIDTH], 2>,
+    Compress: CompressionFunction<[T; DIGEST_WIDTH], 2>,
 {
     let MerkleRootOp {
         leaf_index,
@@ -134,7 +135,7 @@ pub fn generate_trace_row_for_round<F, T, Compress, const DEPTH: usize, const DI
 where
     F: PrimeField32,
     T: Default + Copy + Into<u32>,
-    Compress: PseudoCompressionFunction<[T; DIGEST_WIDTH], 2>,
+    Compress: CompressionFunction<[T; DIGEST_WIDTH], 2>,
 {
     row.step_flags.flags[round] = F::one();
 

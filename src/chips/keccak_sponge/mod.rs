@@ -9,8 +9,8 @@ const BYTE_RANGE_MAX: usize = 1usize << 8;
 
 #[derive(Default, Clone, Debug)]
 pub struct KeccakSpongeChip {
-    pub bus_memory: usize,
-    pub bus_range_8: usize,
+    pub bus_input: usize,
+    pub bus_output: usize,
 
     pub bus_xor_input: usize,
     pub bus_xor_output: usize,

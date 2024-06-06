@@ -7,8 +7,8 @@ pub use trace::MerkleRootOp;
 
 #[derive(Default, Clone, Debug)]
 pub struct MerkleRootChip<const DEPTH: usize, const DIGEST_WIDTH: usize> {
-    pub bus_input: usize,
-    pub bus_output: usize,
+    pub bus_hasher_input: usize,
+    pub bus_hasher_output: usize,
 }
 
 #[cfg(feature = "air-logger")]
@@ -30,13 +30,15 @@ mod tests {
     use crate::test_util::prove_and_verify;
 
     use itertools::Itertools;
-    use p3_keccak::KeccakF;
-    use p3_symmetric::{PseudoCompressionFunction, TruncatedPermutation};
+    use p3_keccak::Keccak256Hash;
+    use p3_symmetric::{CompressionFunction, CompressionFunctionFromHasher};
     use p3_uni_stark::VerificationError;
-    use rand::random;
+    use rand::{rngs::StdRng, Rng, SeedableRng};
 
-    fn generate_digests(leaf_hashes: Vec<[u8; 32]>) -> Vec<Vec<[u8; 32]>> {
-        let keccak = TruncatedPermutation::new(KeccakF {});
+    fn generate_digests<Compress: CompressionFunction<[u8; 32], 2>>(
+        leaf_hashes: Vec<[u8; 32]>,
+        hasher: &Compress,
+    ) -> Vec<Vec<[u8; 32]>> {
         let mut digests = vec![leaf_hashes];
 
         while let Some(last_level) = digests.last().cloned() {
@@ -46,7 +48,7 @@ mod tests {
 
             let next_level = last_level
                 .chunks_exact(2)
-                .map(|chunk| keccak.compress([chunk[0], chunk[1]]))
+                .map(|chunk| hasher.compress([chunk[0], chunk[1]]))
                 .collect();
 
             digests.push(next_level);
@@ -57,11 +59,18 @@ mod tests {
 
     #[test]
     fn test_merkle_root_prove() -> Result<(), VerificationError> {
-        const HEIGHT: usize = 3;
-        let leaf_hashes = (0..2u64.pow(HEIGHT as u32)).map(|_| random()).collect_vec();
-        let digests = generate_digests(leaf_hashes);
+        const RANDOM_SEED: u64 = 0;
+        let mut seeded_rng = StdRng::seed_from_u64(RANDOM_SEED);
 
-        let leaf_index = 0;
+        const HEIGHT: usize = 3;
+        const NUM_LEAVES: usize = 1 << HEIGHT;
+
+        let hasher = CompressionFunctionFromHasher::new(Keccak256Hash);
+
+        let leaf_hashes = (0..NUM_LEAVES).map(|_| seeded_rng.gen()).collect_vec();
+        let digests = generate_digests(leaf_hashes, &hasher);
+
+        let leaf_index = seeded_rng.gen_range(0..NUM_LEAVES);
         let leaf_hash = digests[0][leaf_index];
 
         let siblings: [[u8; 32]; HEIGHT] = (0..HEIGHT)
@@ -75,8 +84,7 @@ mod tests {
             siblings,
         };
 
-        let keccak_hasher = TruncatedPermutation::new(KeccakF {});
-        let trace = MerkleRootChip::generate_trace(vec![op], &keccak_hasher);
+        let trace = MerkleRootChip::generate_trace(vec![op], &hasher);
 
         let chip: MerkleRootChip<HEIGHT, 32> = MerkleRootChip {
             ..Default::default()

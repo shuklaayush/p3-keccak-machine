@@ -9,8 +9,7 @@ pub const NUM_U64_HASH_ELEMS: usize = 4;
 #[derive(Clone, Debug)]
 pub struct KeccakPermuteChip {
     pub bus_input: usize,
-    pub bus_output_full: usize,
-    pub bus_output_digest: usize,
+    pub bus_output: usize,
 }
 
 #[cfg(feature = "air-logger")]
@@ -33,7 +32,7 @@ mod tests {
     use itertools::Itertools;
     use p3_uni_stark::VerificationError;
     use rand::random;
-    use trace::{KeccakPermuteOp, KeccakPermuteOpType};
+    use trace::KeccakPermuteOp;
 
     #[test]
     fn test_keccak_permute_prove() -> Result<(), VerificationError> {
@@ -41,14 +40,10 @@ mod tests {
 
         let chip = KeccakPermuteChip {
             bus_input: 0,
-            bus_output_full: 0,
-            bus_output_digest: 0,
+            bus_output: 0,
         };
         let inputs = (0..NUM_PERMS)
-            .map(|_| KeccakPermuteOp {
-                input: random(),
-                op_type: KeccakPermuteOpType::Full,
-            })
+            .map(|_| KeccakPermuteOp { input: random() })
             .collect_vec();
         let trace = KeccakPermuteChip::generate_trace(inputs);
 

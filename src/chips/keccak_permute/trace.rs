@@ -7,13 +7,7 @@ use super::columns::KeccakPermuteCols;
 use super::KeccakPermuteChip;
 use crate::airs::keccak::{generate_trace_rows, NUM_KECCAK_COLS, NUM_ROUNDS};
 
-pub enum KeccakPermuteOpType {
-    Full,
-    Digest,
-}
-
 pub struct KeccakPermuteOp {
-    pub op_type: KeccakPermuteOpType,
     pub input: [u64; 25],
 }
 
@@ -41,13 +35,7 @@ impl KeccakPermuteChip {
                     row[col_map.is_real_input] = F::one();
                 }
                 if i % NUM_ROUNDS == NUM_ROUNDS - 1 {
-                    let op = &ops[i / NUM_ROUNDS];
-                    match op.op_type {
-                        KeccakPermuteOpType::Full => row[col_map.is_real_output_full] = F::one(),
-                        KeccakPermuteOpType::Digest => {
-                            row[col_map.is_real_output_digest] = F::one();
-                        }
-                    }
+                    row[col_map.is_real_output] = F::one();
                 }
             }
         }

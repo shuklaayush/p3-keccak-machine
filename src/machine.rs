@@ -5,9 +5,8 @@ use p3_machine::machine::Machine;
 use crate::{
     bus::KeccakMachineBus,
     chips::{
-        keccak_permute::KeccakPermuteChip, keccak_sponge::KeccakSpongeChip, memory::MemoryChip,
-        merkle_tree::MerkleRootChip, range_checker::RangeCheckerChip, xor::XorChip,
-        KeccakMachineChip,
+        keccak_permute::KeccakPermuteChip, keccak_sponge::KeccakSpongeChip,
+        merkle_tree::MerkleRootChip, xor::XorChip, KeccakMachineChip,
     },
 };
 
@@ -18,42 +17,41 @@ impl Machine for KeccakMachine {
     type Bus = KeccakMachineBus;
 
     fn chips(&self) -> Vec<KeccakMachineChip> {
-        let keccak_permute_chip = KeccakPermuteChip {
-            bus_input: KeccakMachineBus::KeccakPermuteInputBus as usize,
-            bus_output_full: KeccakMachineBus::KeccakPermuteOutputFullBus as usize,
-            bus_output_digest: KeccakMachineBus::KeccakPermuteOutputDigestBus as usize,
+        let merkle_tree_chip = MerkleRootChip {
+            bus_hasher_input: KeccakMachineBus::KeccakSpongeInput as usize,
+            bus_hasher_output: KeccakMachineBus::KeccakSpongeOutput as usize,
         };
         let keccak_sponge_chip = KeccakSpongeChip {
-            bus_xor_input: KeccakMachineBus::XorInputBus as usize,
-            bus_xor_output: KeccakMachineBus::XorOutputBus as usize,
-            bus_permute_input: KeccakMachineBus::KeccakPermuteInputBus as usize,
-            bus_permute_output: KeccakMachineBus::KeccakPermuteOutputFullBus as usize,
-            bus_range_8: KeccakMachineBus::Range8Bus as usize,
-            bus_memory: KeccakMachineBus::MemoryBus as usize,
+            bus_input: KeccakMachineBus::KeccakSpongeInput as usize,
+            bus_output: KeccakMachineBus::KeccakSpongeOutput as usize,
+            bus_permute_input: KeccakMachineBus::KeccakPermuteInput as usize,
+            bus_permute_output: KeccakMachineBus::KeccakPermuteOutput as usize,
+            bus_xor_input: KeccakMachineBus::XorInput as usize,
+            bus_xor_output: KeccakMachineBus::XorOutput as usize,
         };
-        let merkle_tree_chip = MerkleRootChip {
-            bus_input: KeccakMachineBus::KeccakPermuteInputBus as usize,
-            bus_output: KeccakMachineBus::KeccakPermuteOutputDigestBus as usize,
-        };
-        let range_chip = RangeCheckerChip {
-            bus_range_8: KeccakMachineBus::Range8Bus as usize,
-        };
+        // let range_chip = RangeCheckerChip {
+        //     bus_range_8: KeccakMachineBus::Range8 as usize,
+        // };
         let xor_chip = XorChip {
-            bus_input: KeccakMachineBus::XorInputBus as usize,
-            bus_output: KeccakMachineBus::XorOutputBus as usize,
+            bus_input: KeccakMachineBus::XorInput as usize,
+            bus_output: KeccakMachineBus::XorOutput as usize,
         };
-        let memory_chip = MemoryChip {
-            bus_memory: KeccakMachineBus::MemoryBus as usize,
-            bus_range_8: KeccakMachineBus::Range8Bus as usize,
+        let keccak_permute_chip = KeccakPermuteChip {
+            bus_input: KeccakMachineBus::KeccakPermuteInput as usize,
+            bus_output: KeccakMachineBus::KeccakPermuteOutput as usize,
         };
+        // let memory_chip = MemoryChip {
+        //     bus_memory: KeccakMachineBus::Memory as usize,
+        //     bus_range_8: KeccakMachineBus::Range8 as usize,
+        // };
 
         vec![
-            KeccakMachineChip::KeccakPermute(keccak_permute_chip),
-            KeccakMachineChip::KeccakSponge(keccak_sponge_chip),
             KeccakMachineChip::MerkleRoot(merkle_tree_chip),
-            KeccakMachineChip::Range8(range_chip),
+            KeccakMachineChip::KeccakSponge(keccak_sponge_chip),
             KeccakMachineChip::Xor(xor_chip),
-            KeccakMachineChip::Memory(memory_chip),
+            KeccakMachineChip::KeccakPermute(keccak_permute_chip),
+            // KeccakMachineChip::Range8(range_chip),
+            // KeccakMachineChip::Memory(memory_chip),
         ]
     }
 }
@@ -68,15 +66,17 @@ mod tests {
     };
 
     use itertools::Itertools;
-    use p3_keccak::KeccakF;
+    use p3_keccak::Keccak256Hash;
     use p3_machine::error::VerificationError;
-    use p3_symmetric::{PseudoCompressionFunction, TruncatedPermutation};
-    use rand::{random, rngs::StdRng, Rng, SeedableRng};
+    use p3_symmetric::{CompressionFunction, CompressionFunctionFromHasher};
+    use rand::{rngs::StdRng, Rng, SeedableRng};
     use tracing_forest::{util::LevelFilter, ForestLayer};
     use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
 
-    fn generate_digests(leaf_hashes: &[[u8; DIGEST_WIDTH]]) -> Vec<Vec<[u8; DIGEST_WIDTH]>> {
-        let keccak = TruncatedPermutation::new(KeccakF {});
+    fn generate_digests<Compress: CompressionFunction<[u8; DIGEST_WIDTH], 2>>(
+        leaf_hashes: &[[u8; DIGEST_WIDTH]],
+        hasher: &Compress,
+    ) -> Vec<Vec<[u8; DIGEST_WIDTH]>> {
         let mut digests = vec![leaf_hashes.to_vec()];
 
         while let Some(last_level) = digests.last().cloned() {
@@ -86,7 +86,7 @@ mod tests {
 
             let next_level = last_level
                 .chunks_exact(2)
-                .map(|chunk| keccak.compress([chunk[0], chunk[1]]))
+                .map(|chunk| hasher.compress([chunk[0], chunk[1]]))
                 .collect();
 
             digests.push(next_level);
@@ -98,6 +98,7 @@ mod tests {
     #[test]
     fn test_machine_prove() -> Result<(), VerificationError> {
         const RANDOM_SEED: u64 = 0;
+        let mut seeded_rng = StdRng::seed_from_u64(RANDOM_SEED);
 
         let env_filter = EnvFilter::builder()
             .with_default_directive(LevelFilter::INFO.into())
@@ -106,24 +107,21 @@ mod tests {
             .with(env_filter)
             .with(ForestLayer::default())
             .init();
-        let mut seeded_rng = StdRng::seed_from_u64(RANDOM_SEED);
 
-        const NUM_BYTES: usize = 1000;
-        let preimage = (0..NUM_BYTES).map(|_| random()).collect_vec();
+        const NUM_LEAVES: usize = 1 << MERKLE_TREE_DEPTH;
 
-        let leaf_hashes = (0..2u64.pow(MERKLE_TREE_DEPTH as u32))
-            .map(|_| random())
-            .collect_vec();
-        let digests = generate_digests(&leaf_hashes);
+        let hasher = CompressionFunctionFromHasher::new(Keccak256Hash);
+        let leaf_hashes = (0..NUM_LEAVES).map(|_| seeded_rng.gen()).collect_vec();
+        let digests = generate_digests(&leaf_hashes, &hasher);
 
-        let leaf_index = seeded_rng.gen_range(0..leaf_hashes.len());
+        let leaf_index = seeded_rng.gen_range(0..NUM_LEAVES);
         let machine = KeccakMachine;
 
         let (pk, vk) = machine.setup(&default_config());
 
         let config = default_config();
         let mut challenger = default_challenger();
-        let traces = generate_machine_trace::<MyConfig>(preimage, digests, leaf_index);
+        let traces = generate_machine_trace::<MyConfig, _>(leaf_index, digests, &hasher);
         let proof = machine.prove(&config, &mut challenger, &pk, traces, &[]);
 
         let mut challenger = default_challenger();
