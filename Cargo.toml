@@ -50,11 +50,12 @@ air-logger = [
     "p3-derive/air-logger",
     "p3-machine/air-logger",
 ]
+schema = ["air-logger"]
 
 [[bin]]
 name = "write-schema"
 path = "src/bin/write_schema.rs"
-required-features = ["air-logger", "p3-machine/schema"]
+required-features = ["schema"]
 
 [patch."https://github.com/shuklaayush/p3-utils.git"]
 p3-air-util = { path = "../p3-utils/air-util" }

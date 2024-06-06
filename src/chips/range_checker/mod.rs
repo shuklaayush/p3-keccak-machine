@@ -18,10 +18,12 @@ impl<const MAX: u32> p3_air_util::AirLogger for RangeCheckerChip<MAX> {
         self::columns::RangeCols::<usize>::headers()
     }
 
+    #[cfg(feature = "schema")]
     fn preprocessed_headers_and_types(&self) -> Vec<(String, String, core::ops::Range<usize>)> {
         self::columns::RangePreprocessedCols::<usize>::headers_and_types()
     }
 
+    #[cfg(feature = "schema")]
     fn main_headers_and_types(&self) -> Vec<(String, String, core::ops::Range<usize>)> {
         self::columns::RangeCols::<usize>::headers_and_types()
     }

@@ -3,21 +3,24 @@ mod columns;
 mod interaction;
 mod trace;
 
-pub(crate) const NUM_U8_HASH_ELEMS: usize = 32;
+pub use trace::MerkleRootOp;
 
 #[derive(Default, Clone, Debug)]
-pub struct MerkleRootChip {
+pub struct MerkleRootChip<const DEPTH: usize, const DIGEST_WIDTH: usize> {
     pub bus_input: usize,
     pub bus_output: usize,
 }
 
 #[cfg(feature = "air-logger")]
-impl p3_air_util::AirLogger for MerkleRootChip {
+impl<const DEPTH: usize, const DIGEST_WIDTH: usize> p3_air_util::AirLogger
+    for MerkleRootChip<DEPTH, DIGEST_WIDTH>
+{
     fn main_headers(&self) -> Vec<String> {
-        self::columns::MerkleRootCols::<usize>::headers()
+        self::columns::MerkleRootCols::<usize, DEPTH, DIGEST_WIDTH>::headers()
     }
+    #[cfg(feature = "schema")]
     fn main_headers_and_types(&self) -> Vec<(String, String, core::ops::Range<usize>)> {
-        self::columns::MerkleRootCols::<usize>::headers_and_types()
+        self::columns::MerkleRootCols::<usize, DEPTH, DIGEST_WIDTH>::headers_and_types()
     }
 }
 
@@ -53,21 +56,29 @@ mod tests {
     }
 
     #[test]
-    fn test_merkle_tree_prove() -> Result<(), VerificationError> {
+    fn test_merkle_root_prove() -> Result<(), VerificationError> {
         const HEIGHT: usize = 3;
         let leaf_hashes = (0..2u64.pow(HEIGHT as u32)).map(|_| random()).collect_vec();
         let digests = generate_digests(leaf_hashes);
 
         let leaf_index = 0;
-        let leaf = digests[0][leaf_index];
+        let leaf_hash = digests[0][leaf_index];
 
-        let height = digests.len() - 1;
-        let siblings = (0..height)
+        let siblings: [[u8; 32]; HEIGHT] = (0..HEIGHT)
             .map(|i| digests[i][(leaf_index >> i) ^ 1])
-            .collect::<Vec<[u8; 32]>>();
-        let trace = MerkleRootChip::generate_trace(vec![leaf], vec![leaf_index], vec![siblings]);
+            .collect::<Vec<[u8; 32]>>()
+            .try_into()
+            .unwrap();
+        let op = MerkleRootOp {
+            leaf_index,
+            leaf_hash,
+            siblings,
+        };
 
-        let chip = MerkleRootChip {
+        let keccak_hasher = TruncatedPermutation::new(KeccakF {});
+        let trace = MerkleRootChip::generate_trace(vec![op], &keccak_hasher);
+
+        let chip: MerkleRootChip<HEIGHT, 32> = MerkleRootChip {
             ..Default::default()
         };
 

@@ -50,7 +50,7 @@ impl Machine for KeccakMachine {
         vec![
             KeccakMachineChip::KeccakPermute(keccak_permute_chip),
             KeccakMachineChip::KeccakSponge(keccak_sponge_chip),
-            KeccakMachineChip::MerkleTree(merkle_tree_chip),
+            KeccakMachineChip::MerkleRoot(merkle_tree_chip),
             KeccakMachineChip::Range8(range_chip),
             KeccakMachineChip::Xor(xor_chip),
             KeccakMachineChip::Memory(memory_chip),
@@ -62,6 +62,7 @@ impl Machine for KeccakMachine {
 mod tests {
     use super::*;
     use crate::{
+        chips::{DIGEST_WIDTH, MERKLE_TREE_DEPTH},
         config::{default_challenger, default_config, MyConfig},
         trace::generate_machine_trace,
     };
@@ -70,11 +71,11 @@ mod tests {
     use p3_keccak::KeccakF;
     use p3_machine::error::VerificationError;
     use p3_symmetric::{PseudoCompressionFunction, TruncatedPermutation};
-    use rand::{random, thread_rng, Rng};
+    use rand::{random, rngs::StdRng, Rng, SeedableRng};
     use tracing_forest::{util::LevelFilter, ForestLayer};
     use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
 
-    fn generate_digests(leaf_hashes: &[[u8; 32]]) -> Vec<Vec<[u8; 32]>> {
+    fn generate_digests(leaf_hashes: &[[u8; DIGEST_WIDTH]]) -> Vec<Vec<[u8; DIGEST_WIDTH]>> {
         let keccak = TruncatedPermutation::new(KeccakF {});
         let mut digests = vec![leaf_hashes.to_vec()];
 
@@ -96,24 +97,27 @@ mod tests {
 
     #[test]
     fn test_machine_prove() -> Result<(), VerificationError> {
+        const RANDOM_SEED: u64 = 0;
+
         let env_filter = EnvFilter::builder()
             .with_default_directive(LevelFilter::INFO.into())
             .from_env_lossy();
-
         Registry::default()
             .with(env_filter)
             .with(ForestLayer::default())
             .init();
+        let mut seeded_rng = StdRng::seed_from_u64(RANDOM_SEED);
 
         const NUM_BYTES: usize = 1000;
         let preimage = (0..NUM_BYTES).map(|_| random()).collect_vec();
 
-        const HEIGHT: usize = 8;
-        let leaf_hashes = (0..2u64.pow(HEIGHT as u32)).map(|_| random()).collect_vec();
+        let leaf_hashes = (0..2u64.pow(MERKLE_TREE_DEPTH as u32))
+            .map(|_| random())
+            .collect_vec();
         let digests = generate_digests(&leaf_hashes);
 
-        let leaf_index = thread_rng().gen_range(0..leaf_hashes.len());
-        let machine = KeccakMachine {};
+        let leaf_index = seeded_rng.gen_range(0..leaf_hashes.len());
+        let machine = KeccakMachine;
 
         let (pk, vk) = machine.setup(&default_config());
 

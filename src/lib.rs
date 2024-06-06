@@ -4,7 +4,7 @@ extern crate alloc;
 
 mod airs;
 mod bus;
-mod chips;
+pub mod chips;
 mod config;
 mod machine;
 #[cfg(test)]

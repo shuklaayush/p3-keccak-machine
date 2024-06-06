@@ -17,6 +17,7 @@ impl p3_air_util::AirLogger for XorChip {
         self::columns::XorCols::<usize>::headers()
     }
 
+    #[cfg(feature = "schema")]
     fn main_headers_and_types(&self) -> Vec<(String, String, core::ops::Range<usize>)> {
         self::columns::XorCols::<usize>::headers_and_types()
     }

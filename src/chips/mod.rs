@@ -13,12 +13,16 @@ use self::{
     merkle_tree::MerkleRootChip, range_checker::RangeCheckerChip, xor::XorChip,
 };
 
+pub const MERKLE_TREE_DEPTH: usize = 8;
+pub const DIGEST_WIDTH: usize = 32;
+pub const MAX_U8: u32 = 256;
+
 #[derive(Clone, Debug, EnumDispatch)]
 pub enum KeccakMachineChip {
     KeccakPermute(KeccakPermuteChip),
     KeccakSponge(KeccakSpongeChip),
-    MerkleTree(MerkleRootChip),
-    Range8(RangeCheckerChip<256>),
+    MerkleRoot(MerkleRootChip<MERKLE_TREE_DEPTH, DIGEST_WIDTH>),
+    Range8(RangeCheckerChip<MAX_U8>),
     Xor(XorChip),
     Memory(MemoryChip),
 }

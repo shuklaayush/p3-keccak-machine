@@ -2,7 +2,9 @@ use std::collections::BTreeMap;
 
 use itertools::Itertools;
 use p3_field::PrimeField32;
+use p3_keccak::KeccakF;
 use p3_matrix::dense::RowMajorMatrix;
+use p3_symmetric::TruncatedPermutation;
 use p3_uni_stark::{StarkGenericConfig, Val};
 
 use crate::chips::{
@@ -14,28 +16,35 @@ use crate::chips::{
         columns::KECCAK_RATE_BYTES, trace::KeccakSpongeOp, util::keccakf_u8s, KeccakSpongeChip,
     },
     memory::{MemoryChip, MemoryOp, OperationKind},
-    merkle_tree::MerkleRootChip,
+    merkle_tree::{MerkleRootChip, MerkleRootOp},
     range_checker::RangeCheckerChip,
     xor::XorChip,
+    DIGEST_WIDTH, MERKLE_TREE_DEPTH,
 };
 
 // TODO: Proper execution function for the machine that minimizes redundant computation
 // Store logs/events during execution first and then generate the traces
 pub fn generate_machine_trace<SC: StarkGenericConfig>(
     preimage_bytes: Vec<u8>,
-    digests: Vec<Vec<[u8; 32]>>,
+    digests: Vec<Vec<[u8; DIGEST_WIDTH]>>,
     leaf_index: usize,
 ) -> Vec<Option<RowMajorMatrix<Val<SC>>>>
 where
     Val<SC>: PrimeField32,
 {
-    let leaf = digests[0][leaf_index];
-
-    let height = digests.len() - 1;
-    let siblings = (0..height)
+    let leaf_hash = digests[0][leaf_index];
+    let siblings: [[u8; DIGEST_WIDTH]; MERKLE_TREE_DEPTH] = (0..MERKLE_TREE_DEPTH)
         .map(|i| digests[i][(leaf_index >> i) ^ 1])
-        .collect::<Vec<[u8; 32]>>();
-    let mut keccak_inputs = (0..height)
+        .collect::<Vec<[u8; DIGEST_WIDTH]>>()
+        .try_into()
+        .unwrap();
+    let op = MerkleRootOp {
+        leaf_index,
+        leaf_hash,
+        siblings,
+    };
+
+    let mut keccak_inputs = (0..MERKLE_TREE_DEPTH)
         .map(|i| {
             let index = leaf_index >> i;
             let parity = index & 1;
@@ -65,8 +74,9 @@ where
         })
         .collect_vec();
 
+    let keccak_hasher = TruncatedPermutation::new(KeccakF {});
     let merkle_tree_trace =
-        MerkleRootChip::generate_trace(vec![leaf], vec![leaf_index], vec![siblings]);
+        MerkleRootChip::<MERKLE_TREE_DEPTH, DIGEST_WIDTH>::generate_trace(vec![op], &keccak_hasher);
 
     let keccak_sponge_trace = KeccakSpongeChip::generate_trace(vec![KeccakSpongeOp {
         timestamp: 0,

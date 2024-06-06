@@ -25,6 +25,7 @@ impl p3_air_util::AirLogger for KeccakSpongeChip {
         self::columns::KeccakSpongeCols::<usize>::headers()
     }
 
+    #[cfg(feature = "schema")]
     fn main_headers_and_types(&self) -> Vec<(String, String, core::ops::Range<usize>)> {
         self::columns::KeccakSpongeCols::<usize>::headers_and_types()
     }

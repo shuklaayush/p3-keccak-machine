@@ -1,24 +1,25 @@
 use p3_derive::Columnar;
 
-use crate::airs::keccak::U64_LIMBS;
-use crate::chips::keccak_permute::NUM_U64_HASH_ELEMS;
+use crate::airs::step_flags::StepFlagsCols;
 
 #[repr(C)]
 #[derive(Columnar)]
-pub struct MerkleRootCols<T> {
+pub struct MerkleRootCols<T, const DEPTH: usize, const DIGEST_WIDTH: usize> {
     pub is_real: T,
 
-    pub is_final_step: T,
+    pub step_flags: StepFlagsCols<T, DEPTH>,
 
-    pub node: [[T; U64_LIMBS]; NUM_U64_HASH_ELEMS],
+    pub node: [T; DIGEST_WIDTH],
 
-    pub sibling: [[T; U64_LIMBS]; NUM_U64_HASH_ELEMS],
+    pub sibling: [T; DIGEST_WIDTH],
 
-    pub parity_selector: T,
+    pub is_right_child: T,
 
-    pub left_node: [[T; U64_LIMBS]; NUM_U64_HASH_ELEMS],
+    pub accumulated_index: T,
 
-    pub right_node: [[T; U64_LIMBS]; NUM_U64_HASH_ELEMS],
+    pub left_node: [T; DIGEST_WIDTH],
 
-    pub output: [[T; U64_LIMBS]; NUM_U64_HASH_ELEMS],
+    pub right_node: [T; DIGEST_WIDTH],
+
+    pub output: [T; DIGEST_WIDTH],
 }
