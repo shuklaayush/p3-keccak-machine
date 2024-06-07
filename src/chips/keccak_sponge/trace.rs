@@ -23,99 +23,104 @@ impl KeccakSpongeChip {
     #[instrument(name = "generate KeccakSponge trace", skip_all)]
     pub fn generate_trace<F: PrimeField32>(inputs: Vec<KeccakSpongeOp>) -> RowMajorMatrix<F> {
         let num_cols = KeccakSpongeCols::<F>::num_cols();
-        // Generate the witness row-wise.
-        let num_rows = inputs
+        let num_real_rows = inputs
             .iter()
             .map(|op| op.input.len() / KECCAK_RATE_BYTES + 1)
-            .sum::<usize>()
-            .next_power_of_two();
+            .sum::<usize>();
+        let num_rows = num_real_rows.next_power_of_two();
         let mut trace = RowMajorMatrix::new(vec![F::zero(); num_rows * num_cols], num_cols);
         let (prefix, rows, suffix) = unsafe { trace.values.align_to_mut::<KeccakSpongeCols<F>>() };
         assert!(prefix.is_empty(), "Alignment should match");
         assert!(suffix.is_empty(), "Alignment should match");
         assert_eq!(rows.len(), num_rows);
 
-        generate_trace_rows(rows, inputs.as_slice());
+        // Generate the witness row-wise.
+        let mut real_rows = rows[0..num_real_rows].iter_mut().collect_vec();
+        Self::populate_rows_for_ops(&mut real_rows, &inputs);
+
+        // Pad the trace.
+        for row in rows.chunks_mut(1).skip(num_real_rows) {
+            let mut row_ref = row.iter_mut().collect_vec();
+            Self::populate_rows_for_op(&mut row_ref, &KeccakSpongeOp::default());
+        }
 
         trace
     }
-}
 
-pub fn generate_trace_rows<F: PrimeField32>(
-    rows: &mut [KeccakSpongeCols<F>],
-    inputs: &[KeccakSpongeOp],
-) {
-    let mut offset = 0;
-    for op in inputs.iter() {
-        let len = op.input.len() / KECCAK_RATE_BYTES + 1;
-        let input_rows = &mut rows[offset..offset + len];
-        generate_rows_for_op(input_rows, op);
-        offset += len;
+    pub fn populate_rows_for_ops<F: PrimeField32>(
+        rows: &mut [&mut KeccakSpongeCols<F>],
+        ops: &[KeccakSpongeOp],
+    ) {
+        let mut offset = 0;
+        for op in ops.iter() {
+            let len = op.input.len() / KECCAK_RATE_BYTES + 1;
+            let input_rows = &mut rows[offset..offset + len];
+            Self::populate_rows_for_op(input_rows, op);
+            offset += len;
+        }
     }
 
-    // Pad the trace.
-    for input_rows in rows.chunks_mut(1).skip(offset) {
-        generate_rows_for_op(input_rows, &KeccakSpongeOp::default());
-    }
-}
+    /// Generates the rows associated to a given operation:
+    /// Performs a Keccak sponge permutation and fills the STARK's rows
+    /// accordingly. The number of rows is the number of input chunks of
+    /// size `KECCAK_RATE_BYTES`.
+    pub fn populate_rows_for_op<F: PrimeField32>(
+        rows: &mut [&mut KeccakSpongeCols<F>],
+        op: &KeccakSpongeOp,
+    ) {
+        let mut sponge_state = [0u16; KECCAK_WIDTH_U16S];
 
-/// Generates the rows associated to a given operation:
-/// Performs a Keccak sponge permutation and fills the STARK's rows
-/// accordingly. The number of rows is the number of input chunks of
-/// size `KECCAK_RATE_BYTES`.
-fn generate_rows_for_op<F: PrimeField32>(rows: &mut [KeccakSpongeCols<F>], op: &KeccakSpongeOp) {
-    let mut sponge_state = [0u16; KECCAK_WIDTH_U16S];
+        let KeccakSpongeOp {
+            addr: _,
+            timestamp: _,
+            input,
+        } = op;
 
-    let KeccakSpongeOp {
-        addr: _,
-        timestamp: _,
-        input,
-    } = op;
+        let mut input_blocks = input.chunks_exact(KECCAK_RATE_BYTES);
+        let mut already_absorbed_bytes = 0;
+        for (row, block) in rows.iter_mut().zip(input_blocks.by_ref()) {
+            // We compute the updated state of the sponge.
+            generate_full_input_row::<F>(
+                row,
+                op,
+                already_absorbed_bytes,
+                sponge_state,
+                block.try_into().unwrap(),
+            );
 
-    let mut input_blocks = input.chunks_exact(KECCAK_RATE_BYTES);
-    let mut already_absorbed_bytes = 0;
-    for (row, block) in rows.iter_mut().zip(input_blocks.by_ref()) {
-        // We compute the updated state of the sponge.
-        generate_full_input_row::<F>(
-            row,
+            // We update the state limbs for the next block absorption.
+            // The first `KECCAK_DIGEST_U16s` limbs are stored as bytes after the
+            // computation, so we recompute the corresponding `u16` and update
+            // the first state limbs.
+            sponge_state[..KECCAK_DIGEST_U16S]
+                .iter_mut()
+                .zip(row.updated_digest_state_bytes.chunks_exact(2))
+                .for_each(|(s, bs)| {
+                    *s = bs
+                        .iter()
+                        .enumerate()
+                        .map(|(i, b)| (b.as_canonical_u64() as u16) << (8 * i))
+                        .sum();
+                });
+
+            // The rest of the bytes are already stored in the expected form, so we can
+            // directly update the state with the stored values.
+            sponge_state[KECCAK_DIGEST_U16S..]
+                .iter_mut()
+                .zip(row.partial_updated_state_u16s)
+                .for_each(|(s, x)| *s = x.as_canonical_u64() as u16);
+
+            already_absorbed_bytes += KECCAK_RATE_BYTES;
+        }
+
+        generate_final_row(
+            rows.last_mut().unwrap(),
             op,
             already_absorbed_bytes,
             sponge_state,
-            block.try_into().unwrap(),
+            input_blocks.remainder(),
         );
-
-        // We update the state limbs for the next block absorption.
-        // The first `KECCAK_DIGEST_U16s` limbs are stored as bytes after the
-        // computation, so we recompute the corresponding `u16` and update
-        // the first state limbs.
-        sponge_state[..KECCAK_DIGEST_U16S]
-            .iter_mut()
-            .zip(row.updated_digest_state_bytes.chunks_exact(2))
-            .for_each(|(s, bs)| {
-                *s = bs
-                    .iter()
-                    .enumerate()
-                    .map(|(i, b)| (b.as_canonical_u64() as u16) << (8 * i))
-                    .sum();
-            });
-
-        // The rest of the bytes are already stored in the expected form, so we can
-        // directly update the state with the stored values.
-        sponge_state[KECCAK_DIGEST_U16S..]
-            .iter_mut()
-            .zip(row.partial_updated_state_u16s)
-            .for_each(|(s, x)| *s = x.as_canonical_u64() as u16);
-
-        already_absorbed_bytes += KECCAK_RATE_BYTES;
     }
-
-    generate_final_row(
-        rows.last_mut().unwrap(),
-        op,
-        already_absorbed_bytes,
-        sponge_state,
-        input_blocks.remainder(),
-    );
 }
 
 /// Generates a row where all bytes are input bytes, not padding bytes.

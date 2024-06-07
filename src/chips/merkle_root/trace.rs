@@ -1,6 +1,6 @@
 use itertools::Itertools;
 use p3_field::PrimeField32;
-use p3_matrix::{dense::RowMajorMatrix, Matrix};
+use p3_matrix::dense::RowMajorMatrix;
 use p3_symmetric::CompressionFunction;
 use tracing::instrument;
 
@@ -31,7 +31,6 @@ where
 }
 
 impl<const DEPTH: usize, const DIGEST_WIDTH: usize> MerkleRootChip<DEPTH, DIGEST_WIDTH> {
-    // TODO: Allow empty traces
     #[instrument(name = "generate MerkleRootChip trace", skip_all)]
     pub fn generate_trace<F, T, Compress>(
         operations: Vec<MerkleRootOp<T, DEPTH, DIGEST_WIDTH>>,
@@ -56,26 +55,51 @@ impl<const DEPTH: usize, const DIGEST_WIDTH: usize> MerkleRootChip<DEPTH, DIGEST
         assert!(suffix.is_empty(), "Alignment should match");
         assert_eq!(rows.len(), num_rows);
 
-        for (leaf_rows, op) in rows.chunks_mut(DEPTH).zip(operations.iter()) {
-            generate_trace_rows_for_op(leaf_rows, op, hasher);
-
-            for row in leaf_rows.iter_mut() {
-                row.is_real = F::one();
-            }
-        }
+        let mut real_rows = rows[0..num_real_rows].iter_mut().collect_vec();
+        Self::populate_rows_for_ops(&mut real_rows, &operations, hasher);
 
         // Fill padding rows
         for input_rows in rows.chunks_mut(DEPTH).skip(operations.len()) {
             let op = MerkleRootOp::default();
-            generate_trace_rows_for_op(input_rows, &op, hasher);
+            let mut rows_ref = input_rows.iter_mut().collect_vec();
+            generate_rows_for_op(&mut rows_ref, &op, hasher);
         }
 
         trace
     }
+
+    pub fn populate_rows_for_ops<F, T, Compress>(
+        rows: &mut [&mut MerkleRootCols<F, DEPTH, DIGEST_WIDTH>],
+        ops: &[MerkleRootOp<T, DEPTH, DIGEST_WIDTH>],
+        hasher: &Compress,
+    ) where
+        F: PrimeField32,
+        T: Default + Copy + Into<u32>,
+        Compress: CompressionFunction<[T; DIGEST_WIDTH], 2>,
+    {
+        for (leaf_rows, op) in rows.chunks_mut(DEPTH).zip(ops.iter()) {
+            Self::populate_rows_for_op(leaf_rows, op, hasher);
+        }
+    }
+
+    pub fn populate_rows_for_op<F, T, Compress>(
+        rows: &mut [&mut MerkleRootCols<F, DEPTH, DIGEST_WIDTH>],
+        op: &MerkleRootOp<T, DEPTH, DIGEST_WIDTH>,
+        hasher: &Compress,
+    ) where
+        F: PrimeField32,
+        T: Default + Copy + Into<u32>,
+        Compress: CompressionFunction<[T; DIGEST_WIDTH], 2>,
+    {
+        generate_rows_for_op(rows, op, hasher);
+        for row in rows.iter_mut() {
+            row.is_real = F::one();
+        }
+    }
 }
 
-pub fn generate_trace_rows_for_op<F, T, Compress, const DEPTH: usize, const DIGEST_WIDTH: usize>(
-    rows: &mut [MerkleRootCols<F, DEPTH, DIGEST_WIDTH>],
+pub fn generate_rows_for_op<F, T, Compress, const DEPTH: usize, const DIGEST_WIDTH: usize>(
+    rows: &mut [&mut MerkleRootCols<F, DEPTH, DIGEST_WIDTH>],
     op: &MerkleRootOp<T, DEPTH, DIGEST_WIDTH>,
     hasher: &Compress,
 ) where
@@ -95,7 +119,7 @@ pub fn generate_trace_rows_for_op<F, T, Compress, const DEPTH: usize, const DIGE
     }
 
     let mut node = generate_trace_row_for_round(
-        &mut rows[0],
+        rows[0],
         0,
         leaf_index & 1,
         leaf_index & 1,
@@ -112,7 +136,7 @@ pub fn generate_trace_rows_for_op<F, T, Compress, const DEPTH: usize, const DIGE
 
         let mask = (1 << (round + 1)) - 1;
         node = generate_trace_row_for_round(
-            &mut rows[round],
+            rows[round],
             round,
             leaf_index & mask,
             (leaf_index >> round) & 1,

@@ -16,6 +16,7 @@ use self::{
 pub const MERKLE_TREE_DEPTH: usize = 8;
 pub const DIGEST_WIDTH: usize = 32;
 pub const MAX_U8: u32 = 256;
+pub const NUM_BYTES: usize = 2;
 
 #[derive(Clone, Debug, EnumDispatch)]
 pub enum KeccakMachineChip {
@@ -23,6 +24,6 @@ pub enum KeccakMachineChip {
     KeccakSponge(KeccakSpongeChip),
     MerkleRoot(MerkleRootChip<MERKLE_TREE_DEPTH, DIGEST_WIDTH>),
     Range8(RangeCheckerChip<MAX_U8>),
-    Xor(XorChip),
+    Xor(XorChip<2>),
     Memory(MemoryChip),
 }

@@ -3,20 +3,6 @@ mod columns;
 mod interaction;
 mod trace;
 
-#[derive(Clone)]
-pub enum OperationKind {
-    Read,
-    Write,
-}
-
-#[derive(Clone)]
-pub struct MemoryOp {
-    pub addr: u32,
-    pub timestamp: u32,
-    pub value: u8,
-    pub kind: OperationKind,
-}
-
 #[derive(Default, Clone, Debug)]
 pub struct MemoryChip {
     pub bus_memory: usize,
@@ -43,6 +29,7 @@ mod tests {
     use itertools::Itertools;
     use p3_uni_stark::VerificationError;
     use rand::random;
+    use trace::{MemoryOp, OperationKind};
 
     #[test]
     fn test_memory_prove() -> Result<(), VerificationError> {

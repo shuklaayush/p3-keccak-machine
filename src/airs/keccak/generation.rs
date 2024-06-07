@@ -32,14 +32,18 @@ pub fn generate_trace_rows<F: PrimeField64>(inputs: Vec<[u64; 25]>) -> RowMajorM
     rows.par_chunks_mut(NUM_ROUNDS)
         .zip(padded_inputs)
         .for_each(|(row, input)| {
-            generate_trace_rows_for_perm(row, input);
+            let mut row_refs = row.iter_mut().collect::<Vec<_>>();
+            generate_trace_rows_for_perm(&mut row_refs, input);
         });
 
     trace
 }
 
 /// `rows` will normally consist of 24 rows, with an exception for the final row.
-fn generate_trace_rows_for_perm<F: PrimeField64>(rows: &mut [KeccakCols<F>], input: [u64; 25]) {
+pub fn generate_trace_rows_for_perm<F: PrimeField64>(
+    rows: &mut [&mut KeccakCols<F>],
+    input: [u64; 25],
+) {
     // Populate the preimage for each row.
     for row in rows.iter_mut() {
         for y in 0..5 {
@@ -63,7 +67,7 @@ fn generate_trace_rows_for_perm<F: PrimeField64>(rows: &mut [KeccakCols<F>], inp
         }
     }
 
-    generate_trace_row_for_round(&mut rows[0], 0);
+    generate_trace_row_for_round(rows[0], 0);
 
     for round in 1..rows.len() {
         // Copy previous row's output to next row's input.
@@ -75,7 +79,7 @@ fn generate_trace_rows_for_perm<F: PrimeField64>(rows: &mut [KeccakCols<F>], inp
             }
         }
 
-        generate_trace_row_for_round(&mut rows[round], round);
+        generate_trace_row_for_round(rows[round], round);
     }
 }
 

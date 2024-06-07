@@ -68,18 +68,11 @@ impl<F: Field> BaseInteractionAir<F> for KeccakSpongeChip {
             }],
             col_map
                 .xored_rate_u16s
-                .chunks(2)
-                .map(|rate| {
-                    let column_weights = rate
-                        .iter()
-                        .enumerate()
-                        .map(|(i, &c)| (c, F::from_canonical_usize(1 << (16 * i))))
-                        .collect_vec();
-                    Interaction {
-                        fields: vec![VirtualPairCol::new_main(column_weights, F::zero())],
-                        count: is_real.clone(),
-                        argument_index: self.bus_xor_output,
-                    }
+                .into_iter()
+                .map(|rate_limb| Interaction {
+                    fields: vec![VirtualPairCol::single_main(rate_limb)],
+                    count: is_real.clone(),
+                    argument_index: self.bus_xor_output,
                 })
                 .collect_vec(),
             vec![Interaction {
@@ -124,25 +117,18 @@ impl<F: Field> BaseInteractionAir<F> for KeccakSpongeChip {
         [
             col_map
                 .block_bytes
-                .chunks(4)
-                .zip(col_map.original_rate_u16s.chunks(2))
-                .map(|(block, rate)| {
+                .chunks(2)
+                .zip(col_map.original_rate_u16s)
+                .map(|(block_byte, rate_limb)| {
                     let vc1 = {
-                        let column_weights = block
+                        let column_weights = block_byte
                             .iter()
                             .enumerate()
                             .map(|(i, &c)| (c, F::from_canonical_usize(1 << (8 * i))))
                             .collect_vec();
                         VirtualPairCol::new_main(column_weights, F::zero())
                     };
-                    let vc2 = {
-                        let column_weights = rate
-                            .iter()
-                            .enumerate()
-                            .map(|(i, &c)| (c, F::from_canonical_usize(1 << (16 * i))))
-                            .collect_vec();
-                        VirtualPairCol::new_main(column_weights, F::zero())
-                    };
+                    let vc2 = VirtualPairCol::single_main(rate_limb);
                     Interaction {
                         fields: vec![vc1, vc2],
                         count: is_real.clone(),

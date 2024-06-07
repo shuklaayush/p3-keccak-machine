@@ -7,21 +7,27 @@ use p3_matrix::Matrix;
 use super::columns::XorCols;
 use super::XorChip;
 
-impl<F: Field> BaseAir<F> for XorChip {
+impl<F, const NUM_BYTES: usize> BaseAir<F> for XorChip<NUM_BYTES>
+where
+    F: Field,
+{
     fn width(&self) -> usize {
-        XorCols::<F>::num_cols()
+        XorCols::<F, NUM_BYTES>::num_cols()
     }
 }
 
-impl<AB: AirBuilder> Air<AB> for XorChip {
+impl<AB, const NUM_BYTES: usize> Air<AB> for XorChip<NUM_BYTES>
+where
+    AB: AirBuilder,
+{
     fn eval(&self, builder: &mut AB) {
         let main = builder.main();
         let local = main.row_slice(0);
-        let local: &XorCols<AB::Var> = (*local).borrow();
+        let local: &XorCols<AB::Var, NUM_BYTES> = (*local).borrow();
 
         let base2 = [1, 2, 4, 8, 16, 32, 64, 128].map(AB::Expr::from_canonical_u32);
 
-        for i in 0..4 {
+        for i in 0..NUM_BYTES {
             let byte1: AB::Expr = local.bits1[i]
                 .into_iter()
                 .zip(base2.iter().cloned())

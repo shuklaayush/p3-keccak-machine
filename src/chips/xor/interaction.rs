@@ -7,13 +7,16 @@ use p3_interaction::{BaseInteractionAir, Interaction, InteractionAir, Interactio
 
 use super::{columns::XorCols, XorChip};
 
-impl<F: Field> BaseInteractionAir<F> for XorChip {
+impl<F, const NUM_BYTES: usize> BaseInteractionAir<F> for XorChip<NUM_BYTES>
+where
+    F: Field,
+{
     fn receives_from_indices(
         &self,
         _preprocessed_indices: &[usize],
         main_indices: &[usize],
     ) -> Vec<Interaction<F>> {
-        let col_map = XorCols::from_slice(main_indices);
+        let col_map = XorCols::<_, NUM_BYTES>::from_slice(main_indices);
         let vc1 = {
             let column_weights = col_map
                 .input1
@@ -44,7 +47,7 @@ impl<F: Field> BaseInteractionAir<F> for XorChip {
         _preprocessed_indices: &[usize],
         main_indices: &[usize],
     ) -> Vec<Interaction<F>> {
-        let col_map = XorCols::from_slice(main_indices);
+        let col_map = XorCols::<_, NUM_BYTES>::from_slice(main_indices);
         let column_weights = col_map
             .output
             .into_iter()
@@ -59,16 +62,19 @@ impl<F: Field> BaseInteractionAir<F> for XorChip {
     }
 }
 
-impl<F: Field> InteractionAir<F> for XorChip {
+impl<F, const NUM_BYTES: usize> InteractionAir<F> for XorChip<NUM_BYTES>
+where
+    F: Field,
+{
     fn receives(&self) -> Vec<Interaction<F>> {
-        let col_map = XorCols::<F>::col_map();
+        let col_map = XorCols::<F, NUM_BYTES>::col_map();
         self.receives_from_main_indices(col_map.as_slice())
     }
 
     fn sends(&self) -> Vec<Interaction<F>> {
-        let col_map = XorCols::<F>::col_map();
+        let col_map = XorCols::<F, NUM_BYTES>::col_map();
         self.sends_from_main_indices(col_map.as_slice())
     }
 }
 
-impl<AB: InteractionAirBuilder> Rap<AB> for XorChip {}
+impl<AB, const NUM_BYTES: usize> Rap<AB> for XorChip<NUM_BYTES> where AB: InteractionAirBuilder {}

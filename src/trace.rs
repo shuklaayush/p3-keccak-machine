@@ -12,8 +12,8 @@ use crate::chips::{
         KeccakSpongeChip,
     },
     merkle_root::{MerkleRootChip, MerkleRootOp},
-    xor::XorChip,
-    DIGEST_WIDTH, MERKLE_TREE_DEPTH,
+    xor::{trace::XorOp, XorChip},
+    DIGEST_WIDTH, MERKLE_TREE_DEPTH, NUM_BYTES,
 };
 
 // TODO: Proper execution function for the machine that minimizes redundant computation
@@ -64,7 +64,7 @@ where
     let merkle_tree_trace =
         MerkleRootChip::<MERKLE_TREE_DEPTH, DIGEST_WIDTH>::generate_trace(vec![op], hasher);
 
-    let mut xor_inputs = Vec::new();
+    let mut xor_ops = Vec::new();
     let permute_inputs = keccak_inputs
         .iter()
         .map(|op| {
@@ -73,8 +73,12 @@ where
             bytes_input[2 * DIGEST_WIDTH] = 1;
             bytes_input[KECCAK_RATE_BYTES - 1] |= 0b10000000;
 
-            bytes_input[0..KECCAK_RATE_BYTES].chunks(4).for_each(|val| {
-                xor_inputs.push((val.try_into().unwrap(), [0; 4]));
+            bytes_input[0..KECCAK_RATE_BYTES].chunks(2).for_each(|val| {
+                let op = XorOp {
+                    input1: (val[0] as u16 + ((val[1] as u16) << 8)),
+                    input2: 0,
+                };
+                xor_ops.push(op);
             });
             let input = bytes_input
                 .chunks_exact(8)
@@ -89,7 +93,7 @@ where
 
     let keccak_permute_trace = KeccakPermuteChip::generate_trace(permute_inputs);
 
-    let xor_trace = XorChip::generate_trace(xor_inputs);
+    let xor_trace = XorChip::<NUM_BYTES>::generate_trace(xor_ops);
 
     vec![
         Some(merkle_tree_trace),
