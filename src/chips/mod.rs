@@ -4,13 +4,13 @@ use p3_derive::EnumDispatch;
 pub mod keccak_permute;
 pub mod keccak_sponge;
 pub mod memory;
-pub mod merkle_tree;
+pub mod merkle_root;
 pub mod range_checker;
 pub mod xor;
 
 use self::{
     keccak_permute::KeccakPermuteChip, keccak_sponge::KeccakSpongeChip, memory::MemoryChip,
-    merkle_tree::MerkleRootChip, range_checker::RangeCheckerChip, xor::XorChip,
+    merkle_root::MerkleRootChip, range_checker::RangeCheckerChip, xor::XorChip,
 };
 
 pub const MERKLE_TREE_DEPTH: usize = 8;

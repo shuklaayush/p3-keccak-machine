@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use p3_field::{PrimeField32, PrimeField64};
+use p3_field::PrimeField32;
 use p3_matrix::dense::RowMajorMatrix;
 use tracing::instrument;
 
@@ -41,7 +41,7 @@ impl KeccakSpongeChip {
     }
 }
 
-pub fn generate_trace_rows<F: PrimeField64>(
+pub fn generate_trace_rows<F: PrimeField32>(
     rows: &mut [KeccakSpongeCols<F>],
     inputs: &[KeccakSpongeOp],
 ) {
@@ -63,7 +63,7 @@ pub fn generate_trace_rows<F: PrimeField64>(
 /// Performs a Keccak sponge permutation and fills the STARK's rows
 /// accordingly. The number of rows is the number of input chunks of
 /// size `KECCAK_RATE_BYTES`.
-fn generate_rows_for_op<F: PrimeField64>(rows: &mut [KeccakSpongeCols<F>], op: &KeccakSpongeOp) {
+fn generate_rows_for_op<F: PrimeField32>(rows: &mut [KeccakSpongeCols<F>], op: &KeccakSpongeOp) {
     let mut sponge_state = [0u16; KECCAK_WIDTH_U16S];
 
     let KeccakSpongeOp {
@@ -120,14 +120,13 @@ fn generate_rows_for_op<F: PrimeField64>(rows: &mut [KeccakSpongeCols<F>], op: &
 
 /// Generates a row where all bytes are input bytes, not padding bytes.
 /// This includes updating the state sponge with a single absorption.
-fn generate_full_input_row<F: PrimeField64>(
+fn generate_full_input_row<F: PrimeField32>(
     row: &mut KeccakSpongeCols<F>,
     op: &KeccakSpongeOp,
     already_absorbed_bytes: usize,
     sponge_state: [u16; KECCAK_WIDTH_U16S],
     block: [u8; KECCAK_RATE_BYTES],
 ) {
-    // TODO: This is unconstrained
     row.is_full_input_block = F::one();
     row.block_bytes = block.map(F::from_canonical_u8);
 
@@ -135,7 +134,7 @@ fn generate_full_input_row<F: PrimeField64>(
 }
 
 /// Generates a row containing the last input bytes.
-fn generate_final_row<F: PrimeField64>(
+fn generate_final_row<F: PrimeField32>(
     row: &mut KeccakSpongeCols<F>,
     op: &KeccakSpongeOp,
     already_absorbed_bytes: usize,
@@ -169,7 +168,7 @@ fn generate_final_row<F: PrimeField64>(
 /// absorption. Given a state S = R || C and a block input B,
 /// - R is updated with R XOR B,
 /// - S is replaced by keccakf_u16s(S).
-fn generate_common_fields<F: PrimeField64>(
+fn generate_common_fields<F: PrimeField32>(
     row: &mut KeccakSpongeCols<F>,
     op: &KeccakSpongeOp,
     already_absorbed_bytes: usize,

@@ -1,3 +1,5 @@
+use std::iter::once;
+
 use p3_air::VirtualPairCol;
 use p3_field::Field;
 use p3_interaction::{BaseInteractionAir, Interaction, InteractionAir, InteractionAirBuilder, Rap};
@@ -34,22 +36,26 @@ where
     ) -> Vec<Interaction<F>> {
         let col_map = MerkleRootCols::<_, DEPTH, DIGEST_WIDTH>::from_slice(main_indices);
         vec![Interaction {
-            fields: col_map
-                .left_node
-                .into_iter()
-                .chain(col_map.right_node.into_iter())
-                .map(|elem| VirtualPairCol::single_main(elem))
-                .chain((2 * DIGEST_WIDTH..KECCAK_RATE_BYTES).map(|i| {
-                    VirtualPairCol::constant({
-                        if i == 2 * DIGEST_WIDTH {
-                            F::one()
-                        } else if i == KECCAK_RATE_BYTES - 1 {
-                            F::from_canonical_u8(0b10000000)
-                        } else {
-                            F::zero()
-                        }
-                    })
-                }))
+            fields: once(VirtualPairCol::constant(F::zero()))
+                .chain(
+                    col_map
+                        .left_node
+                        .into_iter()
+                        .chain(col_map.right_node.into_iter())
+                        .map(|elem| VirtualPairCol::single_main(elem))
+                        // TODO: Don't send padding bytes
+                        .chain((2 * DIGEST_WIDTH..KECCAK_RATE_BYTES).map(|i| {
+                            VirtualPairCol::constant({
+                                if i == 2 * DIGEST_WIDTH {
+                                    F::one()
+                                } else if i == KECCAK_RATE_BYTES - 1 {
+                                    F::from_canonical_u8(0b10000000)
+                                } else {
+                                    F::zero()
+                                }
+                            })
+                        })),
+                )
                 .collect(),
             count: VirtualPairCol::single_main(col_map.is_real),
             argument_index: self.bus_hasher_input,

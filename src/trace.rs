@@ -11,7 +11,7 @@ use crate::chips::{
         trace::KeccakSpongeOp,
         KeccakSpongeChip,
     },
-    merkle_tree::{MerkleRootChip, MerkleRootOp},
+    merkle_root::{MerkleRootChip, MerkleRootOp},
     xor::XorChip,
     DIGEST_WIDTH, MERKLE_TREE_DEPTH,
 };

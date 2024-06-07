@@ -1,3 +1,4 @@
+// TODO: Ideally separate padding into different air
 use p3_derive::Columnar;
 
 /// Total number of sponge bytes: number of rate bytes + number of capacity

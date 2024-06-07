@@ -4,9 +4,6 @@ mod interaction;
 pub mod trace;
 pub mod util;
 
-/// Strict upper bound for the individual bytes range-check.
-const BYTE_RANGE_MAX: usize = 1usize << 8;
-
 #[derive(Default, Clone, Debug)]
 pub struct KeccakSpongeChip {
     pub bus_input: usize,

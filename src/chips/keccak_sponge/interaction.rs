@@ -1,3 +1,5 @@
+use std::iter::once;
+
 use itertools::Itertools;
 use p3_air::VirtualPairCol;
 use p3_field::Field;
@@ -20,29 +22,6 @@ impl<F: Field> BaseInteractionAir<F> for KeccakSpongeChip {
             col_map.is_padding_byte[KECCAK_RATE_BYTES - 1],
             col_map.is_full_input_block,
         ]);
-
-        // We recover the 16-bit digest limbs from their corresponding bytes,
-        // and then append them to the rest of the updated state limbs.
-        let mut fields = col_map
-            .updated_digest_state_bytes
-            .chunks(2)
-            .map(|cols| {
-                let column_weights = cols
-                    .iter()
-                    .enumerate()
-                    .map(|(i, &c)| (c, F::from_canonical_usize(1 << (8 * i))))
-                    .collect_vec();
-                VirtualPairCol::new_main(column_weights, F::zero())
-            })
-            .collect_vec();
-
-        fields.extend(
-            col_map
-                .partial_updated_state_u16s
-                .into_iter()
-                .map(VirtualPairCol::single_main),
-        );
-
         [
             // (0..KECCAK_RATE_BYTES)
             //     .map(|i| {
@@ -75,9 +54,14 @@ impl<F: Field> BaseInteractionAir<F> for KeccakSpongeChip {
             //         }
             //     })
             //     .collect_vec(),
+            // TODO: Only send non padding bytes. Interaction field should be
+            //       is_padding_byte[i] * block_bytes[i] but requires degree 2 fields
             vec![Interaction {
-                fields: (0..KECCAK_RATE_BYTES)
-                    .map(|i| VirtualPairCol::single_main(col_map.block_bytes[i]))
+                fields: once(VirtualPairCol::single_main(col_map.is_full_input_block))
+                    .chain(
+                        (0..KECCAK_RATE_BYTES)
+                            .map(|i| VirtualPairCol::single_main(col_map.block_bytes[i])),
+                    )
                     .collect_vec(),
                 count: is_real.clone(),
                 argument_index: self.bus_input,
@@ -99,7 +83,26 @@ impl<F: Field> BaseInteractionAir<F> for KeccakSpongeChip {
                 })
                 .collect_vec(),
             vec![Interaction {
-                fields,
+                // We recover the 16-bit digest limbs from their corresponding bytes,
+                // and then append them to the rest of the updated state limbs.
+                fields: col_map
+                    .updated_digest_state_bytes
+                    .chunks(2)
+                    .map(|cols| {
+                        let column_weights = cols
+                            .iter()
+                            .enumerate()
+                            .map(|(i, &c)| (c, F::from_canonical_usize(1 << (8 * i))))
+                            .collect_vec();
+                        VirtualPairCol::new_main(column_weights, F::zero())
+                    })
+                    .chain(
+                        col_map
+                            .partial_updated_state_u16s
+                            .into_iter()
+                            .map(VirtualPairCol::single_main),
+                    )
+                    .collect_vec(),
                 count: is_real.clone(),
                 argument_index: self.bus_permute_output,
             }],
@@ -118,7 +121,6 @@ impl<F: Field> BaseInteractionAir<F> for KeccakSpongeChip {
             col_map.is_padding_byte[KECCAK_RATE_BYTES - 1],
             col_map.is_full_input_block,
         ]);
-
         [
             col_map
                 .block_bytes

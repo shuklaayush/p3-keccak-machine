@@ -6,7 +6,7 @@ use crate::{
     bus::KeccakMachineBus,
     chips::{
         keccak_permute::KeccakPermuteChip, keccak_sponge::KeccakSpongeChip,
-        merkle_tree::MerkleRootChip, xor::XorChip, KeccakMachineChip,
+        merkle_root::MerkleRootChip, xor::XorChip, KeccakMachineChip,
     },
 };
 
