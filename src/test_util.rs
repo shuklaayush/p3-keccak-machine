@@ -5,7 +5,7 @@ use p3_field::PrimeField32;
 use p3_matrix::dense::RowMajorMatrix;
 #[cfg(debug_assertions)]
 use p3_uni_stark::DebugConstraintBuilder;
-use p3_uni_stark::{prove, verify, SymbolicAirBuilder, Val, VerificationError};
+use p3_uni_stark::{prove, verify, StarkGenericConfig, SymbolicAirBuilder, Val, VerificationError};
 use p3_uni_stark::{ProverConstraintFolder, VerifierConstraintFolder};
 
 use crate::config::{default_challenger, default_config, MyConfig};
@@ -13,10 +13,12 @@ use crate::config::{default_challenger, default_config, MyConfig};
 pub(crate) fn prove_and_verify<
     #[cfg(not(debug_assertions))] A: for<'a> Air<ProverConstraintFolder<'a, MyConfig>>
         + for<'a> Air<VerifierConstraintFolder<'a, MyConfig>>
-        + for<'a> Air<SymbolicAirBuilder<Val<MyConfig>>>,
+        + for<'a> Air<SymbolicAirBuilder<Val<MyConfig>>>
+        + for<'a> Air<SymbolicAirBuilder<<MyConfig as StarkGenericConfig>::Challenge>>,
     #[cfg(debug_assertions)] A: for<'a> Air<ProverConstraintFolder<'a, MyConfig>>
         + for<'a> Air<VerifierConstraintFolder<'a, MyConfig>>
         + for<'a> Air<SymbolicAirBuilder<Val<MyConfig>>>
+        + for<'a> Air<SymbolicAirBuilder<<MyConfig as StarkGenericConfig>::Challenge>>
         + for<'a> Air<DebugConstraintBuilder<'a, Val<MyConfig>>>,
 >(
     air: &A,

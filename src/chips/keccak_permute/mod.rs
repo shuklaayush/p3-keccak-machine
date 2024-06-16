@@ -3,8 +3,6 @@ mod columns;
 mod interaction;
 pub mod trace;
 
-pub const NUM_U64_HASH_ELEMS: usize = 4;
-
 /// Assumes the field size is at least 16 bits.
 #[derive(Clone, Debug)]
 pub struct KeccakPermuteChip {

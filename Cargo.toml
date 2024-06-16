@@ -63,6 +63,24 @@ required-features = ["schema"]
 # p3-interaction = { path = "../p3-utils/interaction" }
 # p3-machine = { path = "../p3-utils/machine" }
 
+[patch."https://github.com/Plonky3/Plonky3.git"]
+p3-air = { git = "https://github.com/shuklaayush/Plonky3", branch = "feat/poseidon-air-changes" }
+p3-baby-bear = { git = "https://github.com/shuklaayush/Plonky3", branch = "feat/poseidon-air-changes" }
+p3-challenger = { git = "https://github.com/shuklaayush/Plonky3", branch = "feat/poseidon-air-changes" }
+p3-commit = { git = "https://github.com/shuklaayush/Plonky3", branch = "feat/poseidon-air-changes" }
+p3-dft = { git = "https://github.com/shuklaayush/Plonky3", branch = "feat/poseidon-air-changes" }
+p3-field = { git = "https://github.com/shuklaayush/Plonky3", branch = "feat/poseidon-air-changes" }
+p3-fri = { git = "https://github.com/shuklaayush/Plonky3", branch = "feat/poseidon-air-changes" }
+p3-keccak = { git = "https://github.com/shuklaayush/Plonky3", branch = "feat/poseidon-air-changes" }
+p3-matrix = { git = "https://github.com/shuklaayush/Plonky3", branch = "feat/poseidon-air-changes" }
+p3-maybe-rayon = { git = "https://github.com/shuklaayush/Plonky3", branch = "feat/poseidon-air-changes" }
+p3-mds = { git = "https://github.com/shuklaayush/Plonky3", branch = "feat/poseidon-air-changes" }
+p3-merkle-tree = { git = "https://github.com/shuklaayush/Plonky3", branch = "feat/poseidon-air-changes" }
+p3-poseidon2 = { git = "https://github.com/shuklaayush/Plonky3", branch = "feat/poseidon-air-changes" }
+p3-symmetric = { git = "https://github.com/shuklaayush/Plonky3", branch = "feat/poseidon-air-changes" }
+p3-uni-stark = { git = "https://github.com/shuklaayush/Plonky3", branch = "feat/poseidon-air-changes" }
+p3-util = { git = "https://github.com/shuklaayush/Plonky3", branch = "feat/poseidon-air-changes" }
+
 # [patch."https://github.com/Plonky3/Plonky3.git"]
 # p3-air = { path = "../Plonky3/air" }
 # p3-baby-bear = { path = "../Plonky3/baby-bear" }
